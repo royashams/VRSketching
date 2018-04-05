@@ -29,7 +29,7 @@ public class SteamVR_LaserPointer : MonoBehaviour
     Transform previousContact = null;
 
 	// Use this for initialization
-	void Start ()
+	void Awake ()
     {
         holder = new GameObject();
         holder.transform.parent = this.transform;
@@ -41,6 +41,7 @@ public class SteamVR_LaserPointer : MonoBehaviour
         pointer.transform.localScale = new Vector3(thickness, thickness, 100f);
         pointer.transform.localPosition = new Vector3(0f, 0f, 50f);
 		pointer.transform.localRotation = Quaternion.identity;
+        pointer.SetActive(false);
 		BoxCollider collider = pointer.GetComponent<BoxCollider>();
         if (addRigidBody)
         {
@@ -75,9 +76,16 @@ public class SteamVR_LaserPointer : MonoBehaviour
             PointerOut(this, e);
     }
 
+    private void OnEnable() {
+        pointer.SetActive(true);
+    }
+
+    private void OnDisable() {
+        pointer.SetActive(false);
+    }
 
     // Update is called once per frame
-	void Update ()
+    void Update ()
     {
         if (!isActive)
         {
@@ -91,7 +99,8 @@ public class SteamVR_LaserPointer : MonoBehaviour
 
         Ray raycast = new Ray(transform.position, transform.forward);
         RaycastHit hit;
-        bool bHit = Physics.Raycast(raycast, out hit);
+        int layermask = 1 << 5;
+        bool bHit = Physics.Raycast(raycast, out hit, Mathf.Infinity, layermask);
 
         if(previousContact && previousContact != hit.transform)
         {
@@ -106,7 +115,7 @@ public class SteamVR_LaserPointer : MonoBehaviour
             OnPointerOut(args);
             previousContact = null;
         }
-        if(bHit && previousContact != hit.transform)
+        if(bHit /*&& previousContact != hit.transform*/)
         {
             PointerEventArgs argsIn = new PointerEventArgs();
             if (controller != null)
