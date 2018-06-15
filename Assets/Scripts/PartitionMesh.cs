@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,130 +12,100 @@ public class PartitionMesh : MonoBehaviour {
         public Collider collider;
     }
 
+    public int tOld = -1;
     private KdTree kdTree;
-    /*private float midX;
-    private float midY;
-    private float midZ;
-    private List<int>[] verticeMap;*/
     private List<int>[] vertexToTriangle;
-    /*private List<List<Vector3>> partitionedVertices;
-    private int numPartition = 8;*/
     private MeshFilter mf;
     private MeshCollider mc;
     // Use this for initialization
-   private void Awake() {
-        /*partitionedVertices = new List<List<Vector3>>();
-        for (int i=0; i<numPartition; ++i) {
-            partitionedVertices.Add(new List<Vector3>());
-        }*/
+    private void Awake() {
         kdTree = gameObject.GetComponent<KdTree>();
     }
 
-    /*public void PartitionMeshWorldSpace(MeshFilter meshFilter, MeshCollider meshCollider) {
-        mf = meshFilter;
-        mc = meshCollider;
-        Vector3[] vertices = meshFilter.sharedMesh.vertices;
-        Vector3[] normals = meshFilter.sharedMesh.normals;
-        int[] triangles = meshFilter.sharedMesh.triangles;
-        GameObject model = meshFilter.gameObject;
-        float minX = 10000f;
-        float minY = 10000f;
-        float minZ = 10000f;
-        float maxX = -10000f;
-        float maxY = -10000f;
-        float maxZ = -10000f;
-        int size = vertices.Length;
-        verticeMap = new List<int>[numPartition];
-        vertexToTriangle = new List<int>[size];
-        for (int i = 0; i < numPartition; ++i) {
-            partitionedVertices[i].Clear();
-            verticeMap[i] = new List<int>();
+    public CustomHitInfo LocalClosestHit(Vector3 position) {
+        if (tOld == -1) {
+            CustomHitInfo hitInfo = GlobalClosestHit(position);
+            tOld = hitInfo.triangleIndex;
+            return hitInfo;
         }
-        for (int i=0; i<size; i++) {
-            vertexToTriangle[i] = new List<int>();
-            Vector3 vertexWorld = model.transform.TransformPoint(vertices[i]);
-            vertices[i] = vertexWorld;
-            if (vertexWorld.x < minX) {
-                minX = vertexWorld.x;
-            }
-            if (vertexWorld.x > maxX) {
-                maxX = vertexWorld.x;
-            }
 
-            if (vertexWorld.y < minY) {
-                minY = vertexWorld.y;
+        Mesh mesh = mf.sharedMesh;
+        int[] visited = new int[mesh.triangles.Length/3];
+        Vector3 positionModelSpace = mf.gameObject.transform.InverseTransformPoint(position);
+        CustomHitInfo hit = new CustomHitInfo();
+        Vector3 a = mesh.vertices[mesh.triangles[3 * tOld]];
+        Vector3 b = mesh.vertices[mesh.triangles[3 * tOld + 1]];
+        Vector3 c = mesh.vertices[mesh.triangles[3 * tOld + 2]];
+        Vector3 s = ClosestPointOnTriangle(a, b, c, positionModelSpace);
+        hit.point = mf.gameObject.transform.TransformPoint(s);
+        float minDistance = 10000f;
+        List<int> trianglesInCurRing = new List<int>();
+        List<int> trianglesInNextRing = new List<int>();
+        trianglesInCurRing.Add(tOld);
+        int count = 0;
+        while (true) {
+            bool gettingCloser = false;
+            foreach (int triangleIdx in trianglesInCurRing) {
+                visited[triangleIdx] = 1;
+                a = mesh.vertices[mesh.triangles[3 * triangleIdx]];
+                b = mesh.vertices[mesh.triangles[3 * triangleIdx + 1]];
+                c = mesh.vertices[mesh.triangles[3 * triangleIdx + 2]];
+                s = ClosestPointOnTriangle(a, b, c, positionModelSpace);
+                float distance = Vector3.Distance(s, positionModelSpace);
+                if (distance < minDistance) {
+                    gettingCloser = true;
+                    if(count>=1) {
+                        Debug.Log("rings away");
+                        Debug.Log(count);
+                    }
+                    minDistance = distance;
+                    hit.point = mf.gameObject.transform.TransformPoint(s);
+                    Vector3 n = Vector3.Cross(b - a, c - a);
+                    n.Normalize();
+                    hit.normal = n;
+                    hit.triangleIndex = triangleIdx;
+                }
+                AddTrianglesToRing(trianglesInNextRing, triangleIdx, visited);
             }
-            if (vertexWorld.y > maxY) {
-                maxY = vertexWorld.y;
+            trianglesInCurRing = trianglesInNextRing;
+            trianglesInNextRing = new List<int>();
+            if (!gettingCloser) {
+                break;
             }
+            count++;
+        }
+        hit.collider = mc;
+        tOld = hit.triangleIndex;
+        return hit;
+    }
 
-            if (vertexWorld.z < minZ) {
-                minZ = vertexWorld.z;
-            }
-            if (vertexWorld.z > maxZ) {
-                maxZ = vertexWorld.z;
+    private void AddTrianglesToRing(List<int> triangleRing, int triangleIdx, int[] visited) {
+        Mesh mesh = mf.sharedMesh;
+        int vertexA = mesh.triangles[3 * triangleIdx];
+        int vertexB = mesh.triangles[3 * triangleIdx + 1];
+        int vertexC = mesh.triangles[3 * triangleIdx + 2];
+        IEnumerable<int> intersections = vertexToTriangle[vertexA].Intersect(vertexToTriangle[vertexB]);
+        foreach (int triangle in intersections) {
+            if (visited[triangle]==0) {
+                triangleRing.Add(triangle);
             }
         }
-        midX = (maxX + minX) / 2;
-        midY = (maxY + minY) / 2;
-        midZ = (maxZ + minZ) / 2;
-        for(int i=0; i<size; ++i) {
-            if (vertices[i].y > midY) {
-                if (vertices[i].x > midX) {
-                    if (vertices[i].z > midZ) {
-                        partitionedVertices[0].Add(vertices[i]);
-                        verticeMap[0].Add(i);
-
-                    }
-                    else {
-                        partitionedVertices[1].Add(vertices[i]);
-                        verticeMap[1].Add(i);
-                    }
-                }
-                else {
-                    if (vertices[i].z > midZ) {
-                        partitionedVertices[2].Add(vertices[i]);
-                        verticeMap[2].Add(i);
-                    }
-                    else {
-                        partitionedVertices[3].Add(vertices[i]);
-                        verticeMap[3].Add(i);
-                    }
-                }
-            }
-            else {
-                if (vertices[i].x > midX) {
-                    if (vertices[i].z > midZ) {
-                        partitionedVertices[4].Add(vertices[i]);
-                        verticeMap[4].Add(i);
-                    }
-                    else {
-                        partitionedVertices[5].Add(vertices[i]);
-                        verticeMap[5].Add(i);
-                    }
-                }
-                else {
-                    if (vertices[i].z > midZ) {
-                        partitionedVertices[6].Add(vertices[i]);
-                        verticeMap[6].Add(i);
-                    }
-                    else {
-                        partitionedVertices[7].Add(vertices[i]);
-                        verticeMap[7].Add(i);
-                    }
-                }
+        intersections = vertexToTriangle[vertexB].Intersect(vertexToTriangle[vertexC]);
+        foreach (int triangle in intersections) {
+            if (visited[triangle] == 0) {
+                triangleRing.Add(triangle);
             }
         }
 
-        int triSize = triangles.Length / 3;
-        for (int i=0; i<triSize; ++i) {
-            vertexToTriangle[triangles[3 * i]].Add(i);
-            vertexToTriangle[triangles[3 * i + 1]].Add(i);
-            vertexToTriangle[triangles[3 * i + 2]].Add(i);
+        intersections = vertexToTriangle[vertexC].Intersect(vertexToTriangle[vertexA]);
+        foreach (int triangle in intersections) {
+            if (visited[triangle] == 0) {
+                triangleRing.Add(triangle);
+            }
         }
-    }*/
+    }
 
-    public CustomHitInfo ClosestHit(Vector3 position) {
+    public CustomHitInfo GlobalClosestHit(Vector3 position) {
         Mesh mesh = mf.sharedMesh;
         Vector3[] vertices = mesh.vertices;
         int[] triangles = mesh.triangles;
@@ -143,7 +114,7 @@ public class PartitionMesh : MonoBehaviour {
         float minDistance = 100000f;
         CustomHitInfo hit = new CustomHitInfo();
         hit.point = mf.gameObject.transform.TransformPoint(vertices[vertexIdx]);
-        foreach(var triangleIdx in vertexToTriangle[vertexIdx]) {
+        foreach (var triangleIdx in vertexToTriangle[vertexIdx]) {
             Vector3 a = vertices[triangles[3 * triangleIdx]];
             Vector3 b = vertices[triangles[3 * triangleIdx + 1]];
             Vector3 c = vertices[triangles[3 * triangleIdx + 2]];
@@ -161,60 +132,6 @@ public class PartitionMesh : MonoBehaviour {
         hit.collider = mc;
         return hit;
     }
-
-    /*private int closestPartition(Vector3 position) {
-        if (position.y > midY) {
-            if (position.x > midX) {
-                if (position.z > midZ) {
-                    return 0;
-                }
-                else {
-                    return 1;
-                }
-            }
-            else {
-                if (position.z > midZ) {
-                    return 2;
-                }
-                else {
-                    return 3;
-                }
-            }
-        }
-        else {
-            if (position.x > midX) {
-                if (position.z > midZ) {
-                    return 4;
-                }
-                else {
-                    return 5;
-                }
-            }
-            else {
-                if (position.z > midZ) {
-                    return 6;
-                }
-                else {
-                    return 7;
-                }
-            }
-        }
-    }
-
-    private int ClosestVertexIdxInPartition(int partitionIdx, Vector3 position) {
-        float minDistance = 100000f;
-        int closestVertexIdx = 0;
-        int size = partitionedVertices[partitionIdx].Count;
-        for(int i=0; i<size; ++i) {
-            float distance = Vector3.Distance(partitionedVertices[partitionIdx][i], position);
-            if (distance < minDistance) {
-                closestVertexIdx = i;
-                minDistance = distance;
-            }
-        }
-        return closestVertexIdx;
-
-    }*/
 
     public void MapVertexToTriangles(MeshFilter meshFilter, MeshCollider meshCollider) {
         mf = meshFilter;
@@ -275,10 +192,10 @@ public class PartitionMesh : MonoBehaviour {
 
     Vector3 PointOnLine(Vector3 a, Vector3 b, Vector3 poi) {
         Vector3 side = b - a;
-        Vector3 projectedPoint = Vector3.Project(poi, side);
+        Vector3 projectedPoint = Vector3.Project(poi-a, side) + a;
         float t1 = Vector3.Dot(projectedPoint - a, side);
         float t2 = Vector3.Dot(b - projectedPoint, side);
-        if (t1 >= 0f && t2 >= 0f) {
+        if (t1>=0f && t2>=0f) {
             return projectedPoint;
         }
         else if (Vector3.Distance(a, poi) < Vector3.Distance(b, poi)) {

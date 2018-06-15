@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ModelsController : MonoBehaviour {
     public GameObject sketch;
+    public GameObject Projectionsketch;
     public SteamVR_TrackedObject trackedObj;
     private SteamVR_Controller.Device controller {
         get { return SteamVR_Controller.Input((int)trackedObj.index); }
@@ -31,7 +32,7 @@ public class ModelsController : MonoBehaviour {
 
     // Update is called once per frame
     void LateUpdate() {
-        if (controller.GetPress(SteamVR_Controller.ButtonMask.Grip) && controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)) {
+        if ((controller.GetPress(SteamVR_Controller.ButtonMask.Grip) && controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)) || Input.GetKeyDown(KeyCode.Return)) {
             SaveDrawing ();
             curModel.SetActive(false);
             if (modelIdx + 1 < gameObject.transform.childCount) {
@@ -61,7 +62,15 @@ public class ModelsController : MonoBehaviour {
 		foreach(Transform child in sketch.transform) {
             Destroy(child.gameObject);
         }
-	}
+        draw = Projectionsketch.GetComponent<Draw>();
+        draw.ns.Clear();
+        draw.points.Clear();
+        draw.normals.Clear();
+        draw.timestamps.Clear();
+        foreach (Transform child in Projectionsketch.transform) {
+            Destroy(child.gameObject);
+        }
+    }
 
     public void ToggleModelRenderer() {
         Renderer rend = GetCurModelComponent<Renderer>();

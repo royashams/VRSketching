@@ -5,27 +5,36 @@ using UnityEngine;
 public class ViveControllerInput : MonoBehaviour {
     public ModelsController mc;
     public Draw draw;
+    public Draw projectionDraw;
+    public GameObject projectionCursor;
+    public GameObject projectionLaser;
     public GameObject visualPointer;
     public float threshhold = 0.05f;
     public GameObject menu;
     private SteamVR_TrackedObject trackedObj;
     private SteamVR_LaserPointer laserPtr;
     private PartitionMesh pm;
-    private Renderer visualPointerRend;
+    //private Renderer visualPointerRend;
     private GameObject cursor;
     private Vector3 hitCursorNormalLocal;
     private int hitCursorTriangleIdx;
     private SteamVR_Controller.Device controller {
         get { return SteamVR_Controller.Input((int)trackedObj.index); }
     }
+    public ProjectionMode projectionMode;
+    public enum ProjectionMode {
+        Occlusion,
+        Spray
+    }
     private enum Mode {
         Drawing,
         Menu
     };
+
     private Mode mode = Mode.Drawing;
 
     void Awake() {
-        visualPointerRend = visualPointer.GetComponent<Renderer>();
+        //visualPointerRend = visualPointer.GetComponent<Renderer>();
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         laserPtr = GetComponent<SteamVR_LaserPointer>();
@@ -57,34 +66,52 @@ public class ViveControllerInput : MonoBehaviour {
     void Update() {
         cursor.transform.position = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
         if (controller.GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu)) {
+            cursor.GetComponent<SwitchCursor>().Switch();
+            draw.SwitchMode();
+            projectionDraw.SwitchMode();
+            projectionLaser.SetActive(!projectionLaser.activeSelf);
             SwitchMode();
+        }
+
+        if (controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad) && !controller.GetPress(SteamVR_Controller.ButtonMask.Grip)) {
+            mc.GetComponent<ModelsController>().ToggleModelRenderer();
         }
         switch (mode) {
             case Mode.Drawing:
-                PartitionMesh.CustomHitInfo hit = pm.ClosestHit(cursor.transform.position);
-                visualPointer.transform.position = hit.point;
-                if (controller.GetHairTrigger()) {                   
-                    //Snapping condition
-                    Ray ray = new Ray(Camera.main.transform.position, cursor.transform.position - Camera.main.transform.position);
-                    RaycastHit hitInfo;
-                    int layermask = 1 << 9;
-                    bool testhit = Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layermask);
-                    if (Vector3.Distance(hit.point, cursor.transform.position) <= threshhold || (testhit && Vector3.Distance(hitInfo.point, Camera.main.transform.position) < Vector3.Distance(cursor.transform.position, Camera.main.transform.position))) {
-                        visualPointerRend.enabled = false;
-                        cursor.transform.position = hit.point;
-                        draw.SetTargetHit(hit);
-                    }
-                    else {
-                        visualPointerRend.enabled = true;
-                        hit = HitCursor();
-                        draw.SetTargetHit(hit);
-                    }
+                PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
+                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                if (triggeraxis == 1.0f) {
+                    hit = pm.GlobalClosestHit(cursor.transform.position);
                 }
                 else {
-                    visualPointerRend.enabled = true;
+                    hit = pm.GlobalClosestHit(cursor.transform.position);
                 }
+                cursor.transform.position = hit.point;
+                draw.SetTargetHit(hit);
+                Ray ray = new Ray();
+                switch (projectionMode) {
+                    case ProjectionMode.Occlusion:
+                        ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);                       
+                        break;
+                    case ProjectionMode.Spray:
+                        ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
+                        break; 
+                }
+                RaycastHit hitInfo;
+                int layermask = 1 << 9;
+                PartitionMesh.CustomHitInfo projectedHit;
+                if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layermask)) {
+                    projectedHit.point = hitInfo.point;
+                    projectedHit.triangleIndex = hitInfo.triangleIndex;
+                    projectedHit.normal = hitInfo.normal;
+                    projectedHit.collider = hitInfo.collider;
+                }
+                else {
+                    projectedHit = HitCursor();
+                }
+                projectionDraw.SetTargetHit(projectedHit);
+                projectionCursor.transform.position = projectedHit.point;
                 break;
-
         }
         
     }
@@ -112,13 +139,13 @@ public class ViveControllerInput : MonoBehaviour {
     public void SwitchMode() {
         switch (mode) {
             case Mode.Drawing:
-                ShowMenuAndLaser();
-                visualPointerRend.enabled = false;
+                //ShowMenuAndLaser();
+                //visualPointerRend.enabled = false;
                 mode = Mode.Menu;
                 break;
             case Mode.Menu:
-                HideMenuAndLaser();
-                visualPointerRend.enabled = true;
+                //HideMenuAndLaser();
+                //visualPointerRend.enabled = true;
                 mode = Mode.Drawing;
                 break;
         }

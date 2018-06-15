@@ -14,6 +14,7 @@ public class Draw : MonoBehaviour {
     public float cursorSize = 32.0f;
     public SteamVR_TrackedObject trackedObj;
     public GameObject Stroke;
+    public PartitionMesh pm;
     private SteamVR_Controller.Device controller {
         get { return SteamVR_Controller.Input((int)trackedObj.index); }
     }
@@ -21,8 +22,15 @@ public class Draw : MonoBehaviour {
     private MeshFilter mf;
     private PartitionMesh.CustomHitInfo targetHit;
     public const float minDistance = 0.001f;
-    public const float rotationThreshold = 10f;
-    public const int lookBack = 5;
+    public const float maxAngle = 60f;
+    public const float angularChangeThreshold = 20f;
+    public const float vThreshold = 0.4f;
+    public const float aThreshold = 0.2f;
+    private Vector3 qold, vold, a;
+    private float lastTimeAddPoint;
+    private int outlierCount = 0;
+    private int resetPoint = 4;
+    public const int lookBack = 2;
     private enum Mode {
         Drawing,
         Erasing
@@ -57,9 +65,14 @@ public class Draw : MonoBehaviour {
                 }
                 else if (drawnLastFrame) {
                     ns.Add(pointsInCurStroke);
+                    if(pm) {
+                        pm.tOld = -1;
+                    }                 
                     pointsInCurStroke = 0;
                 }
                 drawnLastFrame = drawn;
+                break;
+            case Mode.Erasing:
                 break;
         }
     }
@@ -67,13 +80,13 @@ public class Draw : MonoBehaviour {
     bool DrawPoint() {
         //Early return processing
         //Condition 1: if the point is less than minDistance from the previous point, probably that the user is just drawing very slowly, so skip adding the point
-        if (mf.sharedMesh && mf.sharedMesh.vertices.Length >= verticesPerPoint) {
+       /* if (mf.sharedMesh && mf.sharedMesh.vertices.Length >= verticesPerPoint) {
             if (Vector3.Distance(targetHit.point, points[points.Count - 1]) < minDistance) {
                 return true;
             }
         }
         //Condition 2: find if it is an outliner. Will skip if it is.
-        /*if (mf.sharedMesh && mf.sharedMesh.vertices.Length >= lookBack * verticesPerPoint) {
+        if (mf.sharedMesh && mf.sharedMesh.vertices.Length >= lookBack * verticesPerPoint) {
             Vector3 prev = points[points.Count - (lookBack - 1)] - points[points.Count - lookBack];
             float maxRotation = 0f;
             for (int i = points.Count - (lookBack - 2); i < points.Count; i++) {
@@ -84,10 +97,40 @@ public class Draw : MonoBehaviour {
                 }
                 prev = cur;
             }
-            Vector3 nextRot = targetHit.point - points[points.Count - 1];
-            if (Vector3.Angle(nextRot, prev) > maxRotation + rotationThreshold) {
+            float nextRot = Vector3.Angle(targetHit.point - points[points.Count - 1], prev);
+            if (nextRot > maxAngle && nextRot > maxRotation + angularChangeThreshold) {
                 return true;
             }
+        }
+        float curTime = Time.time;
+        if (qold != Vector3.zero && vold != Vector3.zero && a != Vector3.zero) {
+            Vector3 testv = (targetHit.point - qold) / (curTime - lastTimeAddPoint);
+            float speed = testv.magnitude;
+            if (speed > vThreshold && speed - (vold + a).magnitude > aThreshold) {
+                outlierCount++;
+            }
+            else {
+                outlierCount = 0;
+            }
+        }
+
+        if (!mf.sharedMesh || mf.sharedMesh.vertexCount == 0) {
+            qold = targetHit.point;
+        }
+        else if (outlierCount == 0) {
+            Vector3 testv = (targetHit.point - qold) / (curTime - lastTimeAddPoint);
+            if (vold!=Vector3.zero) {
+                a = testv - vold;
+            }
+            vold = testv;
+            qold = targetHit.point;
+            lastTimeAddPoint = curTime;
+        }
+        else {
+            if (outlierCount > resetPoint) {
+                outlierCount = 0;
+            }
+            return true;
         }*/
 
         //Processing ends
