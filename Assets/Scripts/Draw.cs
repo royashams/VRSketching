@@ -137,6 +137,7 @@ public class Draw : MonoBehaviour {
         Vector3[] vertices;
         Vector3[] normals;
         int[] triangles;
+        // creating a stroke by storing in a mesh
         if (mf.sharedMesh) {
             vertices = mf.sharedMesh.vertices;
             triangles = mf.sharedMesh.triangles;
