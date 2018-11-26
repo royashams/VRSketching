@@ -80,6 +80,7 @@ public class ViveControllerInput : MonoBehaviour {
             case Mode.Drawing:
                 PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
                 float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                // `hit` is the point on the mesh closest to the controller
                 if (triggeraxis == 1.0f) {
                     hit = pm.GlobalClosestHit(cursor.transform.position);
                 }
@@ -89,6 +90,7 @@ public class ViveControllerInput : MonoBehaviour {
                 cursor.transform.position = hit.point;
                 draw.SetTargetHit(hit);
                 Ray ray = new Ray();
+                // ray is the ray from the headset to the controller (in `Occlusion` mode, which we want to use)
                 switch (projectionMode) {
                     case ProjectionMode.Occlusion:
                         ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);                       
@@ -100,6 +102,7 @@ public class ViveControllerInput : MonoBehaviour {
                 RaycastHit hitInfo;
                 int layermask = 1 << 9;
                 PartitionMesh.CustomHitInfo projectedHit;
+                // cast `ray` towards the mesh and find the intersection point `projectedHit`
                 if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layermask)) {
                     projectedHit.point = hitInfo.point;
                     projectedHit.triangleIndex = hitInfo.triangleIndex;
