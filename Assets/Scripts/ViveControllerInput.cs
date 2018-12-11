@@ -24,7 +24,8 @@ public class ViveControllerInput : MonoBehaviour {
     public ProjectionMode projectionMode;
     public enum ProjectionMode {
         Occlusion,
-        Spray
+        Spray,
+        ClosestHit
     }
     private enum Mode {
         Drawing,
@@ -78,17 +79,14 @@ public class ViveControllerInput : MonoBehaviour {
         }
         switch (mode) {
             case Mode.Drawing:
-                PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
-                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                // `hit` is the point on the mesh closest to the controller
-                if (triggeraxis == 1.0f) {
-                    hit = pm.GlobalClosestHit(cursor.transform.position);
-                }
-                else {
-                    hit = pm.GlobalClosestHit(cursor.transform.position);
-                }
-                cursor.transform.position = hit.point;
-                draw.SetTargetHit(hit);
+                // aaaaaaa!!!
+                // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
+                // float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                // // `hit` is the point on the mesh closest to the controller
+                // hit = pm.GlobalClosestHit(cursor.transform.position);
+                // cursor.transform.position = hit.point;
+                // draw.SetTargetHit(hit);
+
                 Ray ray = new Ray();
                 // ray is the ray from the headset to the controller (in `Occlusion` mode, which we want to use)
                 switch (projectionMode) {
@@ -98,6 +96,15 @@ public class ViveControllerInput : MonoBehaviour {
                     case ProjectionMode.Spray:
                         ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
                         break; 
+                    case ProjectionMode.ClosestHit:
+                        PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
+                        float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                        // `hit` is the point on the mesh closest to the controller
+                        hit = pm.GlobalClosestHit(cursor.transform.position);
+                        cursor.transform.position = hit.point;
+                        draw.SetTargetHit(hit);
+                        ray = new Ray();
+                        break;
                 }
                 RaycastHit hitInfo;
                 int layermask = 1 << 9;
