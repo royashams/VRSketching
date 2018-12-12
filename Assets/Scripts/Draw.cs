@@ -18,6 +18,7 @@ public class Draw : MonoBehaviour {
     private SteamVR_Controller.Device controller {
         get { return SteamVR_Controller.Input((int)trackedObj.index); }
     }
+    public string name;
     private int pointsInCurStroke = 0;
     private MeshFilter mf;
     private PartitionMesh.CustomHitInfo targetHit;
@@ -53,6 +54,8 @@ public class Draw : MonoBehaviour {
 
     // Update is called once per frame
     void LateUpdate() {
+        if (name=="draw")
+            return;
         switch (mode) {
             case Mode.Drawing:
                 bool drawn = false;
@@ -153,6 +156,7 @@ public class Draw : MonoBehaviour {
         Array.Resize(ref vertices, oldVerticeLength + verticesPerPoint);
         Array.Resize(ref normals, oldVerticeLength + verticesPerPoint);
         MeshCollider meshCollider = targetHit.collider as MeshCollider;
+        
         Mesh mesh = meshCollider.sharedMesh;
         Vector3 bn;
         if (oldVerticeLength == 0) {

@@ -79,12 +79,11 @@ public class ViveControllerInput : MonoBehaviour {
         }
         switch (mode) {
             case Mode.Drawing:
-                // aaaaaaa!!!
-                // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
-                // float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
+                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                 // // `hit` is the point on the mesh closest to the controller
-                // hit = pm.GlobalClosestHit(cursor.transform.position);
-                // cursor.transform.position = hit.point;
+                hit = pm.GlobalClosestHit(cursor.transform.position);
+                cursor.transform.position = hit.point;
                 // draw.SetTargetHit(hit);
 
                 Ray ray = new Ray();
@@ -94,14 +93,16 @@ public class ViveControllerInput : MonoBehaviour {
                         ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);                       
                         break;
                     case ProjectionMode.Spray:
-                        ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                        break; 
+                        //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
+                        ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
+                        break;
                     case ProjectionMode.ClosestHit:
-                        PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
-                        float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                        // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
+                        // float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                         // `hit` is the point on the mesh closest to the controller
                         hit = pm.GlobalClosestHit(cursor.transform.position);
                         cursor.transform.position = hit.point;
+                        //Debug.Log("Inside");
                         draw.SetTargetHit(hit);
                         ray = new Ray();
                         break;
@@ -110,7 +111,8 @@ public class ViveControllerInput : MonoBehaviour {
                 int layermask = 1 << 9;
                 PartitionMesh.CustomHitInfo projectedHit;
                 // cast `ray` towards the mesh and find the intersection point `projectedHit`
-                if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layermask)) {
+                if (Physics.Raycast(ray, out hitInfo)) {
+                    Debug.Log("Found intersection " + (hitInfo.collider == null).ToString());
                     projectedHit.point = hitInfo.point;
                     projectedHit.triangleIndex = hitInfo.triangleIndex;
                     projectedHit.normal = hitInfo.normal;
@@ -118,7 +120,9 @@ public class ViveControllerInput : MonoBehaviour {
                 }
                 else {
                     projectedHit = HitCursor();
+                    //Debug.Log("Fallback " + (projectedHit).ToString());
                 }
+                // Debug.Log("Outside");
                 projectionDraw.SetTargetHit(projectedHit);
                 projectionCursor.transform.position = projectedHit.point;
                 break;
