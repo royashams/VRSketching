@@ -23,17 +23,20 @@ public class ViveControllerInput : MonoBehaviour {
     }
     public ProjectionMode projectionMode;
     public enum ProjectionMode {
+        ClosestHit,
         Occlusion,
         Spray
     }
     private enum Mode {
-        Drawing,
+        Drawing, 
         Menu
     };
 
     private Mode mode = Mode.Drawing;
 
     void Awake() {
+        Debug.Log("VCI");
+        Debug.Log(projectionMode);
         //visualPointerRend = visualPointer.GetComponent<Renderer>();
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
@@ -80,22 +83,22 @@ public class ViveControllerInput : MonoBehaviour {
             case Mode.Drawing:
                 PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
                 float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                if (triggeraxis == 1.0f) {
-                    hit = pm.GlobalClosestHit(cursor.transform.position);
-                }
-                else {
-                    hit = pm.GlobalClosestHit(cursor.transform.position);
-                }
+                hit = pm.GlobalClosestHit(cursor.transform.position);
                 cursor.transform.position = hit.point;
                 draw.SetTargetHit(hit);
                 Ray ray = new Ray();
                 switch (projectionMode) {
                     case ProjectionMode.Occlusion:
+                        //Debug.Log("OCCLUSION");
                         ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);                       
                         break;
                     case ProjectionMode.Spray:
+                        //Debug.Log("SPRAY");
                         ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                        break; 
+                        break;
+                    case ProjectionMode.ClosestHit:
+                       //Debug.Log("CLOSEST HIT");
+                        break;
                 }
                 RaycastHit hitInfo;
                 int layermask = 1 << 9;

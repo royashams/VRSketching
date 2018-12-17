@@ -11,6 +11,7 @@ public class Draw : MonoBehaviour {
     public List<Vector3> points;
     public List<Vector3> normals;
     public List<float> timestamps;
+    private ViveControllerInput.ProjectionMode projectionMode;
     public float cursorSize = 32.0f;
     public SteamVR_TrackedObject trackedObj;
     public GameObject Stroke;
@@ -35,42 +36,67 @@ public class Draw : MonoBehaviour {
         Drawing,
         Erasing
     }
-
-    ;
-
     private Mode mode = Mode.Drawing;
+    //private ProjectionMode pmode = ProjectionMode.ClosestHit;
     private MeshCollider mc;
     private bool drawnLastFrame = false;
     //private Material mat;
     // Use this for initialization
+
+    //void Awake()
+    //{
+
+    //}
     void Start() {
+        projectionMode = GetComponent<ViveControllerInput>().projectionMode;
         ns = new List<int>();
         points = new List<Vector3>();
         normals = new List<Vector3>();
         timestamps = new List<float>();
         //mat = GetComponent<Renderer>().material;
+        
     }
 
     // Update is called once per frame
     void LateUpdate() {
+        Debug.Log("fml");
+        Debug.Log(projectionMode);
         switch (mode) {
             case Mode.Drawing:
-                bool drawn = false;
-                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                if (triggeraxis == 1.0f) {
-                    if (!drawnLastFrame) {
-                        CreateNewStroke();
-                    }
-                    drawn = DrawPoint();
+                switch (projectionMode) {
+                    case ViveControllerInput.ProjectionMode.ClosestHit:
+                        bool drawn = false;
+                        float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                        if (triggeraxis == 1.0f)
+                        {
+                            if (!drawnLastFrame)
+                            {
+                                CreateNewStroke();
+                            }
+                            drawn = DrawPoint();
+                        }
+                        else if (drawnLastFrame)
+                        {
+                            ns.Add(pointsInCurStroke);
+                            if (pm)
+                            {
+                                pm.tOld = -1;
+                            }
+                            pointsInCurStroke = 0;
+                        }
+                        drawnLastFrame = drawn;
+                        Debug.Log("closest hit");
+                        break;
+                    case ViveControllerInput.ProjectionMode.Occlusion:
+                        Debug.Log("occlusion");
+                        break;
+                    case ViveControllerInput.ProjectionMode.Spray:
+                        Debug.Log("spray");
+                        break;
+                    default:
+                        Debug.Log("default");
+                        break;
                 }
-                else if (drawnLastFrame) {
-                    ns.Add(pointsInCurStroke);
-                    if(pm) {
-                        pm.tOld = -1;
-                    }                 
-                    pointsInCurStroke = 0;
-                }
-                drawnLastFrame = drawn;
                 break;
             case Mode.Erasing:
                 break;
