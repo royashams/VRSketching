@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class ViveControllerInput : MonoBehaviour {
     public ModelsController mc;
-    public Draw draw;
-    public Draw projectionDraw;
+    public Draw closestDraw;
+    public Draw occlusionDraw;
+    public Draw sprayDraw;
     public GameObject projectionCursor;
     public GameObject projectionLaser;
     public GameObject visualPointer;
@@ -37,6 +38,27 @@ public class ViveControllerInput : MonoBehaviour {
     void Awake() {
         Debug.Log("VCI");
         Debug.Log(projectionMode);
+
+        if (projectionMode.ToString() == "ClosestHit")
+        {
+            Debug.Log("chose Closest Hit!");
+            occlusionDraw.enabled = false;
+            sprayDraw.enabled = false;
+            closestDraw.enabled = true;
+        }
+        else if (projectionMode.ToString() == "Occlusion") {
+            Debug.Log("chose Occlusion!");
+            occlusionDraw.enabled = true;
+            closestDraw.enabled = false;
+            sprayDraw.enabled = false;
+        }
+        else {
+            Debug.Log("chose Stroke!");
+            sprayDraw.enabled = true;
+            occlusionDraw.enabled = false;
+            closestDraw.enabled = false;
+        }
+
         //visualPointerRend = visualPointer.GetComponent<Renderer>();
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
@@ -70,8 +92,9 @@ public class ViveControllerInput : MonoBehaviour {
         cursor.transform.position = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
         if (controller.GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu)) {
             cursor.GetComponent<SwitchCursor>().Switch();
-            draw.SwitchMode();
-            projectionDraw.SwitchMode();
+            closestDraw.SwitchMode();
+            occlusionDraw.SwitchMode();
+            sprayDraw.SwitchMode();
             projectionLaser.SetActive(!projectionLaser.activeSelf);
             SwitchMode();
         }
@@ -85,7 +108,7 @@ public class ViveControllerInput : MonoBehaviour {
                 float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                 hit = pm.GlobalClosestHit(cursor.transform.position);
                 cursor.transform.position = hit.point;
-                draw.SetTargetHit(hit);
+                closestDraw.SetTargetHit(hit);
                 Ray ray = new Ray();
                 switch (projectionMode) {
                     case ProjectionMode.Occlusion:
@@ -112,7 +135,8 @@ public class ViveControllerInput : MonoBehaviour {
                 else {
                     projectedHit = HitCursor();
                 }
-                projectionDraw.SetTargetHit(projectedHit);
+                occlusionDraw.SetTargetHit(projectedHit);
+                sprayDraw.SetTargetHit(projectedHit);
                 projectionCursor.transform.position = projectedHit.point;
                 break;
         }
