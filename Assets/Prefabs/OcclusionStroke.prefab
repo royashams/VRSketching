@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 23217042684754322}
   - component: {fileID: 114989240996761532}
   m_Layer: 0
-  m_Name: Stroke
+  m_Name: OcclusionStroke
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -57,7 +57,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 8d84008f483c947458bb89f74b85ae97, type: 2}
+  - {fileID: 2100000, guid: 3d74fe2476c7d244f9d7ce9c03c7e1f3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
