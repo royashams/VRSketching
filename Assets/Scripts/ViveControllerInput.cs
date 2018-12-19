@@ -15,6 +15,7 @@ public class ViveControllerInput : MonoBehaviour {
     private SteamVR_LaserPointer laserPtr;
     private PartitionMesh pm;
     //private Renderer visualPointerRend;
+    //;
     private GameObject cursor;
     private Vector3 hitCursorNormalLocal;
     private int hitCursorTriangleIdx;
