@@ -39,17 +39,17 @@ public class ViveControllerInput : MonoBehaviour {
     private Mode mode = Mode.Drawing;
 
     void Awake() {
-        //visualPointerRend = visualPointer.GetComponent<Renderer>();
-        ChangeStroke();
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         laserPtr = GetComponent<SteamVR_LaserPointer>();
+
         foreach (Transform child in transform) {
             if (child.name == "Cursor") {
                 cursor = child.gameObject;
                 break;
             }
         }
+        ChangeStroke();
     }
 
     private void Start() {
@@ -160,16 +160,23 @@ public class ViveControllerInput : MonoBehaviour {
         closestDraw.enabled = false;
         occlusionDraw.enabled = false;
         sprayDraw.enabled = false;
+        projectionCursor.SetActive(true);
+        projectionLaser.SetActive(true);
+
         switch (projectionMode)
         {
             case ProjectionMode.Occlusion:
                 occlusionDraw.enabled = true;
+                laserPtr.enabled = false;
                 break;
             case ProjectionMode.ClosestHit:
                 closestDraw.enabled = true;
+                projectionLaser.SetActive(false);
+                projectionCursor.SetActive(false);
                 break;
             case ProjectionMode.Spray:
                 sprayDraw.enabled = true;
+                laserPtr.enabled = false;
                 break;
         }
     }
