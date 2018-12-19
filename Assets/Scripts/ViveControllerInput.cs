@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class ViveControllerInput : MonoBehaviour {
     public ModelsController mc;
-    public Draw draw;
-    public Draw projectionDraw;
+    public Draw closestDraw;
+    public Draw occlusionDraw;
+    public Draw sprayDraw;
     public GameObject projectionCursor;
     public GameObject projectionLaser;
     public GameObject visualPointer;
@@ -25,6 +26,7 @@ public class ViveControllerInput : MonoBehaviour {
     }
     public ProjectionMode projectionMode;
     public enum ProjectionMode {
+        ClosestHit,
         Occlusion,
         Spray,
         ClosestHit
@@ -38,6 +40,7 @@ public class ViveControllerInput : MonoBehaviour {
 
     void Awake() {
         //visualPointerRend = visualPointer.GetComponent<Renderer>();
+        ChangeStroke();
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         laserPtr = GetComponent<SteamVR_LaserPointer>();
@@ -70,8 +73,9 @@ public class ViveControllerInput : MonoBehaviour {
         cursor.transform.position = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
         if (controller.GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu)) {
             cursor.GetComponent<SwitchCursor>().Switch();
-            draw.SwitchMode();
-            projectionDraw.SwitchMode();
+            closestDraw.SwitchMode();
+            occlusionDraw.SwitchMode();
+            sprayDraw.SwitchMode();
             projectionLaser.SetActive(!projectionLaser.activeSelf);
             SwitchMode();
         }
@@ -86,8 +90,7 @@ public class ViveControllerInput : MonoBehaviour {
                 // // `hit` is the point on the mesh closest to the controller
                 hit = pm.GlobalClosestHit(cursor.transform.position);
                 cursor.transform.position = hit.point;
-                // draw.SetTargetHit(hit);
-
+                closestDraw.SetTargetHit(hit);
                 Ray ray = new Ray();
                 // ray is the ray from the headset to the controller (in `Occlusion` mode, which we want to use)
                 switch (projectionMode) {
@@ -124,8 +127,8 @@ public class ViveControllerInput : MonoBehaviour {
                     projectedHit = HitCursor();
                     //Debug.Log("Fallback " + (projectedHit).ToString());
                 }
-                // Debug.Log("Outside");
-                projectionDraw.SetTargetHit(projectedHit);
+                occlusionDraw.SetTargetHit(projectedHit);
+                sprayDraw.SetTargetHit(projectedHit);
                 projectionCursor.transform.position = projectedHit.point;
                 break;
         }
@@ -150,6 +153,25 @@ public class ViveControllerInput : MonoBehaviour {
     private void HideMenuAndLaser() {
         laserPtr.enabled = false;
         menu.SetActive(false);
+    }
+
+    private void ChangeStroke()
+    {
+        closestDraw.enabled = false;
+        occlusionDraw.enabled = false;
+        sprayDraw.enabled = false;
+        switch (projectionMode)
+        {
+            case ProjectionMode.Occlusion:
+                occlusionDraw.enabled = true;
+                break;
+            case ProjectionMode.ClosestHit:
+                closestDraw.enabled = true;
+                break;
+            case ProjectionMode.Spray:
+                sprayDraw.enabled = true;
+                break;
+        }
     }
 
     public void SwitchMode() {
