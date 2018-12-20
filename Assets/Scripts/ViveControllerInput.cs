@@ -28,8 +28,7 @@ public class ViveControllerInput : MonoBehaviour {
     public enum ProjectionMode {
         ClosestHit,
         Occlusion,
-        Spray,
-        ClosestHit
+        Spray
     }
     private enum Mode {
         Drawing,
@@ -42,14 +41,13 @@ public class ViveControllerInput : MonoBehaviour {
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         laserPtr = GetComponent<SteamVR_LaserPointer>();
-
+        ChangeStroke();
         foreach (Transform child in transform) {
             if (child.name == "Cursor") {
                 cursor = child.gameObject;
                 break;
             }
         }
-        ChangeStroke();
     }
 
     private void Start() {
@@ -98,8 +96,8 @@ public class ViveControllerInput : MonoBehaviour {
                         ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);                       
                         break;
                     case ProjectionMode.Spray:
-                        //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                        ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
+                        ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
+                        //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
                         break;
                     case ProjectionMode.ClosestHit:
                         // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
@@ -108,7 +106,7 @@ public class ViveControllerInput : MonoBehaviour {
                         hit = pm.GlobalClosestHit(cursor.transform.position);
                         cursor.transform.position = hit.point;
                         //Debug.Log("Inside");
-                        draw.SetTargetHit(hit);
+                        closestDraw.SetTargetHit(hit);
                         ray = new Ray();
                         break;
                 }
@@ -116,8 +114,9 @@ public class ViveControllerInput : MonoBehaviour {
                 int layermask = 1 << 9;
                 PartitionMesh.CustomHitInfo projectedHit;
                 // cast `ray` towards the mesh and find the intersection point `projectedHit`
-                if (Physics.Raycast(ray, out hitInfo)) {
-                    Debug.Log("Found intersection " + (hitInfo.collider == null).ToString());
+                if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layermask))
+                {
+                    //Debug.Log("Found intersection " + (hitInfo.collider == null).ToString());
                     projectedHit.point = hitInfo.point;
                     projectedHit.triangleIndex = hitInfo.triangleIndex;
                     projectedHit.normal = hitInfo.normal;
