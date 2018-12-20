@@ -16,6 +16,7 @@ public class ViveControllerInput : MonoBehaviour {
     private PartitionMesh pm;
     //private Renderer visualPointerRend;
     //;
+    //;
     private GameObject cursor;
     private Vector3 hitCursorNormalLocal;
     private int hitCursorTriangleIdx;
