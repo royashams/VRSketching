@@ -13,6 +13,7 @@ public class ViveControllerInput : MonoBehaviour {
     public float threshhold = 0.05f;
     public GameObject menu;
     private SteamVR_TrackedObject trackedObj;
+    SteamVR_Controller.Device device;
     private SteamVR_LaserPointer laserPtr;
     private PartitionMesh pm;
     //private Renderer visualPointerRend;
@@ -66,6 +67,11 @@ public class ViveControllerInput : MonoBehaviour {
         hitCursorTriangleIdx = hitInfo.triangleIndex;
     }
 
+    private void FixedUpdate()
+    {
+        device = SteamVR_Controller.Input((int)trackedObj.index);
+    }
+
     // Update is called once per frame
     void Update() {
         cursor.transform.position = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
@@ -78,9 +84,45 @@ public class ViveControllerInput : MonoBehaviour {
             SwitchMode();
         }
 
-        if (controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad) && !controller.GetPress(SteamVR_Controller.ButtonMask.Grip)) {
-            mc.GetComponent<ModelsController>().ToggleModelRenderer();
+        if (device.GetPress(SteamVR_Controller.ButtonMask.Touchpad))
+        {
+            Vector2 touchpad = (device.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0));
+            print("Pressing Touchpad");
+
+            if (touchpad.y > 0.7f)
+            {
+                // PROBLEM! need to change projectionMode here as well, otherwise it will use the wrong ray :( 
+                print("Moving Up");
+                DisableStroke();
+                occlusionDraw.enabled = true;
+
+            }
+
+            else if (touchpad.y < -0.7f)
+            {
+                print("Moving Down");
+            }
+
+            if (touchpad.x > 0.7f)
+            {
+                print("Moving Right");
+                DisableStroke();
+                sprayDraw.enabled = true;
+            }
+
+            else if (touchpad.x < -0.7f)
+            {
+                print("Moving left");
+                DisableStroke();
+                closestDraw.enabled = true;
+            }
+
         }
+
+        // this part makes the model disappear
+        //if (controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad) && !controller.GetPress(SteamVR_Controller.ButtonMask.Grip)) {
+        //    mc.GetComponent<ModelsController>().ToggleModelRenderer();
+        //}
         switch (mode) {
             case Mode.Drawing:
                 PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
@@ -156,9 +198,7 @@ public class ViveControllerInput : MonoBehaviour {
 
     private void ChangeStroke()
     {
-        closestDraw.enabled = false;
-        occlusionDraw.enabled = false;
-        sprayDraw.enabled = false;
+        DisableStroke();
         projectionCursor.SetActive(true);
         projectionLaser.SetActive(true);
 
@@ -178,6 +218,12 @@ public class ViveControllerInput : MonoBehaviour {
                 laserPtr.enabled = false;
                 break;
         }
+    }
+
+    private void DisableStroke() {
+        closestDraw.enabled = false;
+        occlusionDraw.enabled = false;
+        sprayDraw.enabled = false;
     }
 
     public void SwitchMode() {
