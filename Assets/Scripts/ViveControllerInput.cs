@@ -36,6 +36,7 @@ public class ViveControllerInput : MonoBehaviour {
         Menu
     };
 
+    private Vector2 touchCoords  = new Vector2(0.0f, 0.0f); 
     private Mode mode = Mode.Drawing;
 
     void Awake() {
@@ -81,6 +82,15 @@ public class ViveControllerInput : MonoBehaviour {
             SwitchMode();
         }
 
+        if (controller.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
+        {
+            Vector2 touch = (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0));
+            Debug.Log("i was touched...");
+            touchCoords.x = touch.x;
+            touchCoords.y = touch.y;
+            Debug.Log(touchCoords);
+        }
+
         if (controller.GetPress(SteamVR_Controller.ButtonMask.Touchpad))
         {
             Vector2 touchpad = (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0));
@@ -107,6 +117,13 @@ public class ViveControllerInput : MonoBehaviour {
                 projectionMode = "Spray";
                 ChangeStroke(projectionMode);
                 sprayDraw.enabled = true;
+
+                //if (Input.touchCount > 0) {
+                //    Touch touch = Input.GetTouch(0);
+                //    Vector2 pos = touch.position;
+                //    Debug.Log(pos.x);
+                //    Debug.Log(pos.y);
+                //}
             }
 
             else if (touchpad.x < -0.7f)
@@ -138,7 +155,8 @@ public class ViveControllerInput : MonoBehaviour {
                         ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
                         break;
                     case "Spray":
-                        ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
+                        //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
+                        ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
                         //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
                         break;
                     case "Closest Hit":
@@ -225,6 +243,8 @@ public class ViveControllerInput : MonoBehaviour {
             case "Occlusion":
                 occlusionDraw.enabled = true;
                 laserPtr.enabled = false;
+                projectionLaser.SetActive(true);
+                projectionCursor.SetActive(true);
                 break;
             case "Closest Hit":
                 closestDraw.enabled = true;
@@ -234,6 +254,9 @@ public class ViveControllerInput : MonoBehaviour {
             case "Spray":
                 sprayDraw.enabled = true;
                 laserPtr.enabled = false;
+                projectionLaser.SetActive(true);
+                projectionCursor.SetActive(true);
+
                 break;
                 //case ProjectionMode.Occlusion:
                 //    occlusionDraw.enabled = true;
