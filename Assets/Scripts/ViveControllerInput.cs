@@ -28,6 +28,7 @@ public class ViveControllerInput : MonoBehaviour {
     private string projectionMode;
     private Ray OcclusionRay;
     private Ray SprayRay;
+    private Ray ComboRay;
 
     private enum Mode {
         Drawing,
@@ -163,8 +164,8 @@ public class ViveControllerInput : MonoBehaviour {
                         //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
                         break;
                     case "Combo":
-                        OcclusionRay = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
-                        ray = OcclusionRay;
+                        ComboRay = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+                        ray = ComboRay;
                         break;
                     case "Closest Hit":
                         // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
@@ -220,6 +221,25 @@ public class ViveControllerInput : MonoBehaviour {
         
     }
 
+    // Create the combined ray from two rays by calculating confidence values and averaging them
+    private Ray makeComboRay() {
+        // controller positions ciP and orientation ciO
+        Vector3 ciP = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
+        Vector3 ciO = gameObject.transform.TransformVector(0f, -0.1f, 0.05f);
+        // head: hiP and hiO
+        Vector3 hiP = Camera.main.transform.position;
+        Vector3 hiO = Camera.main.transform.forward;  // idk if forward is right but w/e
+        // mesh
+        Mesh mesh = mc.GetComponent<PartitionMesh>().GetComponent<MeshFilter>().sharedMesh;
+        Vector3[] meshNorms = mesh.normals;
+        float dist = Vector3.Distance(comboDraw.points[comboDraw.points.Count-1], comboDraw.points[comboDraw.points.Count-2]);
+        float threshhold = 2f;
+        if (dist > threshhold) {
+            Debug.Log(dist);
+        }
+
+        return ComboRay;
+    }
     private PartitionMesh.CustomHitInfo HitCursor() {
         //A little hack
         PartitionMesh.CustomHitInfo customHitInfo;
