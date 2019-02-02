@@ -7,6 +7,7 @@ public class ViveControllerInput : MonoBehaviour {
     public Draw closestDraw;
     public Draw occlusionDraw;
     public Draw sprayDraw;
+    public Draw comboDraw;
     public GameObject projectionCursor;
     public GameObject projectionLaser;
     public GameObject visualPointer;
@@ -25,12 +26,9 @@ public class ViveControllerInput : MonoBehaviour {
         get { return SteamVR_Controller.Input((int)trackedObj.index); }
     }
     private string projectionMode;
-    //public ProjectionMode projectionMode;
-    //public enum ProjectionMode {
-    //    ClosestHit,
-    //    Occlusion,
-    //    Spray
-    //}
+    private Ray OcclusionRay;
+    private Ray SprayRay;
+
     private enum Mode {
         Drawing,
         Menu
@@ -78,6 +76,7 @@ public class ViveControllerInput : MonoBehaviour {
             closestDraw.SwitchMode();
             occlusionDraw.SwitchMode();
             sprayDraw.SwitchMode();
+            comboDraw.SwitchMode();
             projectionLaser.SetActive(!projectionLaser.activeSelf);
             SwitchMode();
         }
@@ -88,7 +87,6 @@ public class ViveControllerInput : MonoBehaviour {
             //Debug.Log("i was touched...");
             touchCoords.x = touch.x;
             touchCoords.y = touch.y;
-            Debug.Log(touchCoords);
         }
 
         if (controller.GetPress(SteamVR_Controller.ButtonMask.Touchpad))
@@ -108,7 +106,10 @@ public class ViveControllerInput : MonoBehaviour {
 
             else if (touchpad.y < -0.7f)
             {
-                print("Moving Down");
+                print("Down: Combined Ray");
+                projectionMode = "Combo";
+                ChangeStroke(projectionMode);
+                comboDraw.enabled = true;
             }
 
             if (touchpad.x > 0.7f)
@@ -152,12 +153,18 @@ public class ViveControllerInput : MonoBehaviour {
                 // ray is the ray from the headset to the controller (in `Occlusion` mode, which we want to use)
                 switch (projectionMode) {
                     case "Occlusion":
-                        ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
+                        OcclusionRay = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
+                        ray = OcclusionRay;
                         break;
                     case "Spray":
                          //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                         ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
+                        SprayRay = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
+                        ray = SprayRay;
                         //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
+                        break;
+                    case "Combo":
+                        OcclusionRay = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
+                        ray = OcclusionRay;
                         break;
                     case "Closest Hit":
                         // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
@@ -206,6 +213,7 @@ public class ViveControllerInput : MonoBehaviour {
                 }
                 occlusionDraw.SetTargetHit(projectedHit);
                 sprayDraw.SetTargetHit(projectedHit);
+                comboDraw.SetTargetHit(projectedHit);
                 projectionCursor.transform.position = projectedHit.point;
                 break;
         }
@@ -256,7 +264,12 @@ public class ViveControllerInput : MonoBehaviour {
                 laserPtr.enabled = false;
                 projectionLaser.SetActive(true);
                 projectionCursor.SetActive(true);
-
+                break;
+            case "Combo":
+                comboDraw.enabled = true;
+                laserPtr.enabled = false;
+                projectionLaser.SetActive(true);
+                projectionCursor.SetActive(true);
                 break;
                 //case ProjectionMode.Occlusion:
                 //    occlusionDraw.enabled = true;
