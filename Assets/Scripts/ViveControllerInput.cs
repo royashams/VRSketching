@@ -85,7 +85,7 @@ public class ViveControllerInput : MonoBehaviour {
         if (controller.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
         {
             Vector2 touch = (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0));
-            Debug.Log("i was touched...");
+            //Debug.Log("i was touched...");
             touchCoords.x = touch.x;
             touchCoords.y = touch.y;
             Debug.Log(touchCoords);
@@ -155,8 +155,8 @@ public class ViveControllerInput : MonoBehaviour {
                         ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
                         break;
                     case "Spray":
-                        //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                        ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
+                         //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
+                         ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
                         //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
                         break;
                     case "Closest Hit":
