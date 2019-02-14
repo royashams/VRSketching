@@ -10,6 +10,8 @@ public class PartitionMesh : MonoBehaviour {
         public Vector3 normal;
         public int triangleIndex;
         public Collider collider;
+
+        public bool success;
     }
 
     public int tOld = -1;
@@ -76,6 +78,7 @@ public class PartitionMesh : MonoBehaviour {
         }
         hit.collider = mc;
         tOld = hit.triangleIndex;
+        hit.success = true;
         return hit;
     }
 
@@ -130,6 +133,7 @@ public class PartitionMesh : MonoBehaviour {
             }
         }
         hit.collider = mc;
+        hit.success = true;
         return hit;
     }
 

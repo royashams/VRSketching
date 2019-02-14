@@ -42,6 +42,7 @@ public class Draw : MonoBehaviour {
     private Mode mode = Mode.Drawing;
     private MeshCollider mc;
     private bool drawnLastFrame = false;
+    private int counter = 0;
     //private Material mat;
     // Use this for initialization
     void Start() {
@@ -54,6 +55,9 @@ public class Draw : MonoBehaviour {
 
     // Update is called once per frame
     void LateUpdate() {
+        // counter++;
+        // if (counter % 20 != 0)
+        //     return;
         if (name=="draw")
             return;
         switch (mode) {

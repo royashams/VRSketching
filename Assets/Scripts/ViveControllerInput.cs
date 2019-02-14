@@ -38,6 +38,8 @@ public class ViveControllerInput : MonoBehaviour {
     private Vector2 touchCoords  = new Vector2(0.0f, 0.0f); 
     private Mode mode = Mode.Drawing;
 
+    private int counter = 0;
+
     void Awake() {
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
@@ -71,6 +73,9 @@ public class ViveControllerInput : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        // counter++;
+        // if (counter % 20 != 0)
+        //     return;
         cursor.transform.position = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
         if (controller.GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu)) {
             cursor.GetComponent<SwitchCursor>().Switch();
@@ -171,11 +176,11 @@ public class ViveControllerInput : MonoBehaviour {
                         // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
                         // float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                         // `hit` is the point on the mesh closest to the controller
-                        hit = pm.GlobalClosestHit(cursor.transform.position);
-                        cursor.transform.position = hit.point;
-                        //Debug.Log("Inside");
-                        closestDraw.SetTargetHit(hit);
-                        ray = new Ray();
+                        // hit = pm.GlobalClosestHit(cursor.transform.position);
+                        // cursor.transform.position = hit.point;
+                        // //Debug.Log("Inside");
+                        // closestDraw.SetTargetHit(hit);
+                        // ray = new Ray();
                         break;
 
                         //case ProjectionMode.Occlusion:
@@ -207,6 +212,7 @@ public class ViveControllerInput : MonoBehaviour {
                     projectedHit.triangleIndex = hitInfo.triangleIndex;
                     projectedHit.normal = hitInfo.normal;
                     projectedHit.collider = hitInfo.collider;
+                    projectedHit.success = true;
                 }
                 else {
                     projectedHit = HitCursor();
@@ -227,58 +233,84 @@ public class ViveControllerInput : MonoBehaviour {
         Vector3 ciP = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
         Vector3 ciO = gameObject.transform.TransformVector(0f, -0.1f, 0.05f);
         // head: hiP and hiO
-        Vector3 hiP = Camera.main.transform.position;
-        Vector3 hiO = Camera.main.transform.forward;  // idk if forward is right but w/e
+        // Vector3 hiP = Camera.main.transform.position;
+        Vector3 hiO = (ciP - Camera.main.transform.position).normalized;
         // mesh
         // Mesh mesh = mc.GetComponent<PartitionMesh>().GetComponent<MeshFilter>().sharedMesh;
         // Vector3[] meshNorms = mesh.normals;
 
         // ray from controller and camera
         Ray controllerRay = new Ray(ciP, ciO);
-        Ray cameraRay = new Ray(hiP, hiO);
+        Ray viewRay = new Ray(ciP, hiO);
 
         // hit info from two rays
         PartitionMesh.CustomHitInfo controllerHitInfo = getProjectedHit(controllerRay);
-        PartitionMesh.CustomHitInfo cameraHitInfo = getProjectedHit(cameraRay);
+        PartitionMesh.CustomHitInfo viewHitInfo = getProjectedHit(viewRay);
 
         // TODO: take care of threshold stuff later
-        float dist = Vector3.Distance(comboDraw.points[comboDraw.points.Count-1], comboDraw.points[comboDraw.points.Count-2]);
-        float threshhold = 2f;
+        // float dist = Vector3.Distance(comboDraw.points[comboDraw.points.Count-1], comboDraw.points[comboDraw.points.Count-2]);
+        // float threshold = 2f;
     
         Vector3 controllerHitPoint = controllerHitInfo.point; //cm_i
         Vector3 controllerHitNormal = controllerHitInfo.normal; //cm'_i
         //Distance cd_i=||p_i-cm_i||, Angle ca_i= max(0,-(c’_i dot cm’_i ));  
-        float dist_cdI = Vector3.Distance(ciP, controllerHitPoint);
-        float angle_caI = Mathf.Max(0, -Vector3.Dot(ciO, controllerHitNormal));    
+        float dist_cdI =  Mathf.Infinity;
+        if (controllerHitInfo.success)
+            dist_cdI = Vector3.Distance(ciP, controllerHitPoint);
+        float angle_caI = Mathf.Max(0, -Vector3.Dot(controllerRay.direction, controllerHitNormal));    
 
         // make view viO, which is an orientation  view v’_i = normalize(p_i-h_i)
-        Vector3 viO = Vector3.Normalize(ciP-hiP);
-        Ray viewRay = new Ray(ciP, viO);
-        PartitionMesh.CustomHitInfo viewHitInfo = getProjectedHit(cameraRay);
+        // Vector3 viO = Vector3.Normalize(ciP-hiP);
+        // Ray viewRay = new Ray(ciP, viO);
+        // PartitionMesh.CustomHitInfo viewHitInfo = getProjectedHit(cameraRay);
         Vector3 viewHitPoint = viewHitInfo.point;
         Vector3 viewHitNormal = viewHitInfo.normal;
-        float dist_hdI = Vector3.Distance(ciP, viewHitPoint);
-        float angle_haI = Mathf.Max(0, -Vector3.Dot(viO, viewHitNormal)); 
+        float dist_hdI = Mathf.Infinity;
+        if (viewHitInfo.success)
+            dist_hdI = Vector3.Distance(ciP, viewHitPoint);
+        float angle_haI = Mathf.Max(0, -Vector3.Dot(viewRay.direction, viewHitNormal));
 
-        float sigmoidDist = 0.1f; //edit later
+        float sigmoidDist = 0.5f; //edit later
 
         float w1 = Sigmoid(dist_cdI/sigmoidDist) * angle_caI;
         float w2 = Sigmoid(dist_hdI/sigmoidDist) * angle_haI;
 
+        var weightSum = Mathf.Epsilon + w1 + w2;
+        w1 = w1/weightSum;
+        w2 = w2/weightSum;
+
         // do check for w1 w2 = 0 later
 
-        Ray ComboRay = new Ray(ciO, (w1 * ciO + w2 * viO));
-        Debug.Log("occ " + OcclusionRay.ToString());
-        Debug.Log("spr "+ SprayRay.ToString());
-        Debug.Log("combo" + ComboRay.ToString());
+        // Ray ComboRay = new Ray(ciP, (w1 * controllerRay.direction + w2 * viewRay.direction));
+         Ray ComboRay = new Ray(ciP, Vector3.Slerp(controllerRay.direction, viewRay.direction, w2));
+        // Debug.Log("occ " + OcclusionRay.ToString());
+        // Debug.Log("spr "+ SprayRay.ToString());
+        // Debug.Log("combo" + ComboRay.ToString());
+        if (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x == 1.0f)
+        {
+            Debug.Log(
+                dist_cdI.ToString() + ' ' + angle_caI.ToString() + ' ' +
+                dist_hdI.ToString() + ' ' + angle_haI.ToString() + "    " +
+                w1.ToString() + ' ' + w2.ToString()
+            );
+            Debug.Log(
+                controllerRay.direction.ToString("F3") + 
+                viewRay.direction.ToString("F3") + 
+                ComboRay.direction.ToString("F3"));
+
+            // if(angle_caI < 0.4)
+            //     Debug.Log("Blah");
+        }    
 
         return ComboRay;
     }
 
 
     public static float Sigmoid(float value) {
-        float k = Mathf.Exp(value);
-        return k / (1.0f + k);
+        // float k = Mathf.Exp(value);
+        // return k / (1.0f + k);
+        float k = Mathf.Pow(1.0f-value*value, 2);
+        return Mathf.Clamp(k, 0, 1);
     }
 
     private PartitionMesh.CustomHitInfo getProjectedHit(Ray ray) {
@@ -293,9 +325,11 @@ public class ViveControllerInput : MonoBehaviour {
             projectedHit.triangleIndex = hitInfo.triangleIndex;
             projectedHit.normal = hitInfo.normal;
             projectedHit.collider = hitInfo.collider;
+            projectedHit.success = true;
         }
         else {
             projectedHit = HitCursor();
+            projectedHit.success = false;
             //Debug.Log("Fallback " + (projectedHit).ToString());
         }
         return projectedHit;
@@ -309,6 +343,7 @@ public class ViveControllerInput : MonoBehaviour {
         customHitInfo.normal = cursor.transform.TransformVector(hitCursorNormalLocal);
         customHitInfo.triangleIndex = hitCursorTriangleIdx;
         customHitInfo.collider = cursor.GetComponent<MeshCollider>();
+        customHitInfo.success = false;
         return customHitInfo;
     }
 
