@@ -26,8 +26,8 @@ public class ViveControllerInput : MonoBehaviour {
         get { return SteamVR_Controller.Input((int)trackedObj.index); }
     }
     private string projectionMode;
-    private Ray OcclusionRay;
-    private Ray SprayRay;
+    public Ray OcclusionRay;
+    public Ray SprayRay;
     private Ray ComboRay;
 
     private enum Mode {
@@ -151,20 +151,20 @@ public class ViveControllerInput : MonoBehaviour {
                 cursor.transform.position = hit.point;
                 closestDraw.SetTargetHit(hit);
                 Ray ray = new Ray();
+                OcclusionRay = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
+                SprayRay = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
                 // ray is the ray from the headset to the controller (in `Occlusion` mode, which we want to use)
                 switch (projectionMode) {
                     case "Occlusion":
-                        OcclusionRay = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);
                         ray = OcclusionRay;
                         break;
                     case "Spray":
                          //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                        SprayRay = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
                         ray = SprayRay;
                         //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
                         break;
                     case "Combo":
-                        ComboRay = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
+                        ComboRay = makeComboRay();
                         ray = ComboRay;
                         break;
                     case "Closest Hit":
@@ -223,55 +223,62 @@ public class ViveControllerInput : MonoBehaviour {
 
     // Create the combined ray from two rays by calculating confidence values and averaging them
     private Ray makeComboRay() {
-        // controller positions ciP and orientation ciO
+        // controller positions ciP and orientation ciO, ciP is p_i
         Vector3 ciP = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
         Vector3 ciO = gameObject.transform.TransformVector(0f, -0.1f, 0.05f);
         // head: hiP and hiO
         Vector3 hiP = Camera.main.transform.position;
         Vector3 hiO = Camera.main.transform.forward;  // idk if forward is right but w/e
         // mesh
-        Mesh mesh = mc.GetComponent<PartitionMesh>().GetComponent<MeshFilter>().sharedMesh;
-        Vector3[] meshNorms = mesh.normals;
+        // Mesh mesh = mc.GetComponent<PartitionMesh>().GetComponent<MeshFilter>().sharedMesh;
+        // Vector3[] meshNorms = mesh.normals;
 
         // ray from controller and camera
         Ray controllerRay = new Ray(ciP, ciO);
         Ray cameraRay = new Ray(hiP, hiO);
 
         // hit info from two rays
-        PartitionMesh.CustomHitInfo firstHitInfo = getProjectedHit(OcclusionRay);
-        PartitionMesh.CustomHitInfo secondHitInfo = getProjectedHit(SprayRay);
         PartitionMesh.CustomHitInfo controllerHitInfo = getProjectedHit(controllerRay);
         PartitionMesh.CustomHitInfo cameraHitInfo = getProjectedHit(cameraRay);
 
+        // TODO: take care of threshold stuff later
         float dist = Vector3.Distance(comboDraw.points[comboDraw.points.Count-1], comboDraw.points[comboDraw.points.Count-2]);
         float threshhold = 2f;
     
-        Vector3 hitPoint = firstHitInfo.point;
-        Vector3 hitNormal = firstHitInfo.normal;
-        Vector3 controllerHitPoint = controllerHitInfo.point;
-        Vector3 controllerHitNormal = controllerHitInfo.normal;
+        Vector3 controllerHitPoint = controllerHitInfo.point; //cm_i
+        Vector3 controllerHitNormal = controllerHitInfo.normal; //cm'_i
         //Distance cd_i=||p_i-cm_i||, Angle ca_i= max(0,-(c’_i dot cm’_i ));  
-        float dist_cdI = Vector3.Distance(hitPoint, controllerHitPoint);
+        float dist_cdI = Vector3.Distance(ciP, controllerHitPoint);
         float angle_caI = Mathf.Max(0, -Vector3.Dot(ciO, controllerHitNormal));    
 
         // make view viO, which is an orientation  view v’_i = normalize(p_i-h_i)
-        Vector3 viO = Vector3.Normalize(hitPoint-hiP);
-        Ray viewRay = new Ray(hitPoint,viO);
+        Vector3 viO = Vector3.Normalize(ciP-hiP);
+        Ray viewRay = new Ray(ciP, viO);
         PartitionMesh.CustomHitInfo viewHitInfo = getProjectedHit(cameraRay);
         Vector3 viewHitPoint = viewHitInfo.point;
         Vector3 viewHitNormal = viewHitInfo.normal;
-        float dist_hdI = Vector3.Distance(hitPoint, viewHitPoint);
+        float dist_hdI = Vector3.Distance(ciP, viewHitPoint);
         float angle_haI = Mathf.Max(0, -Vector3.Dot(viO, viewHitNormal)); 
-        
 
+        float sigmoidDist = 0.1f; //edit later
 
+        float w1 = Sigmoid(dist_cdI/sigmoidDist) * angle_caI;
+        float w2 = Sigmoid(dist_hdI/sigmoidDist) * angle_haI;
 
-        // need to figure out how to do exact same operation for both rays and how to store each
-        // keep them in arrays bc they're just two? 
+        // do check for w1 w2 = 0 later
 
-    
+        Ray ComboRay = new Ray(ciO, (w1 * ciO + w2 * viO));
+        Debug.Log("occ " + OcclusionRay.ToString());
+        Debug.Log("spr "+ SprayRay.ToString());
+        Debug.Log("combo" + ComboRay.ToString());
 
         return ComboRay;
+    }
+
+
+    public static float Sigmoid(float value) {
+        float k = Mathf.Exp(value);
+        return k / (1.0f + k);
     }
 
     private PartitionMesh.CustomHitInfo getProjectedHit(Ray ray) {
