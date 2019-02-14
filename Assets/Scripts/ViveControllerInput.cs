@@ -232,14 +232,69 @@ public class ViveControllerInput : MonoBehaviour {
         // mesh
         Mesh mesh = mc.GetComponent<PartitionMesh>().GetComponent<MeshFilter>().sharedMesh;
         Vector3[] meshNorms = mesh.normals;
+
+        // ray from controller and camera
+        Ray controllerRay = new Ray(ciP, ciO);
+        Ray cameraRay = new Ray(hiP, hiO);
+
+        // hit info from two rays
+        PartitionMesh.CustomHitInfo firstHitInfo = getProjectedHit(OcclusionRay);
+        PartitionMesh.CustomHitInfo secondHitInfo = getProjectedHit(SprayRay);
+        PartitionMesh.CustomHitInfo controllerHitInfo = getProjectedHit(controllerRay);
+        PartitionMesh.CustomHitInfo cameraHitInfo = getProjectedHit(cameraRay);
+
         float dist = Vector3.Distance(comboDraw.points[comboDraw.points.Count-1], comboDraw.points[comboDraw.points.Count-2]);
         float threshhold = 2f;
-        if (dist > threshhold) {
-            Debug.Log(dist);
-        }
+    
+        Vector3 hitPoint = firstHitInfo.point;
+        Vector3 hitNormal = firstHitInfo.normal;
+        Vector3 controllerHitPoint = controllerHitInfo.point;
+        Vector3 controllerHitNormal = controllerHitInfo.normal;
+        //Distance cd_i=||p_i-cm_i||, Angle ca_i= max(0,-(c’_i dot cm’_i ));  
+        float dist_cdI = Vector3.Distance(hitPoint, controllerHitPoint);
+        float angle_caI = Mathf.Max(0, -Vector3.Dot(ciO, controllerHitNormal));    
+
+        // make view viO, which is an orientation  view v’_i = normalize(p_i-h_i)
+        Vector3 viO = Vector3.Normalize(hitPoint-hiP);
+        Ray viewRay = new Ray(hitPoint,viO);
+        PartitionMesh.CustomHitInfo viewHitInfo = getProjectedHit(cameraRay);
+        Vector3 viewHitPoint = viewHitInfo.point;
+        Vector3 viewHitNormal = viewHitInfo.normal;
+        float dist_hdI = Vector3.Distance(hitPoint, viewHitPoint);
+        float angle_haI = Mathf.Max(0, -Vector3.Dot(viO, viewHitNormal)); 
+        
+
+
+
+        // need to figure out how to do exact same operation for both rays and how to store each
+        // keep them in arrays bc they're just two? 
+
+    
 
         return ComboRay;
     }
+
+    private PartitionMesh.CustomHitInfo getProjectedHit(Ray ray) {
+        RaycastHit hitInfo;
+        int layermask = 1 << 9;
+        PartitionMesh.CustomHitInfo projectedHit;
+        // cast `ray` towards the mesh and find the intersection point `projectedHit`
+        if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layermask))
+        {
+            //Debug.Log("Found intersection " + (hitInfo.collider == null).ToString());
+            projectedHit.point = hitInfo.point;
+            projectedHit.triangleIndex = hitInfo.triangleIndex;
+            projectedHit.normal = hitInfo.normal;
+            projectedHit.collider = hitInfo.collider;
+        }
+        else {
+            projectedHit = HitCursor();
+            //Debug.Log("Fallback " + (projectedHit).ToString());
+        }
+        return projectedHit;
+
+    }
+
     private PartitionMesh.CustomHitInfo HitCursor() {
         //A little hack
         PartitionMesh.CustomHitInfo customHitInfo;
