@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Valve.VR;
 
 public class Draw : MonoBehaviour {
     public int verticesPerPoint = 6;

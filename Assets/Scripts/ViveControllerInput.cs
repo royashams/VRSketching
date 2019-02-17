@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Valve.VR;
+using Valve.VR.Extras;
 
 public class ViveControllerInput : MonoBehaviour {
     public ModelsController mc;
