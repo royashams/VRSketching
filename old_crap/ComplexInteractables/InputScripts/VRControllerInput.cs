@@ -12,13 +12,13 @@ public class VRControllerInput : MonoBehaviour
 
 	//Controller References
 	protected SteamVR_TrackedObject trackedObj;
-	public SteamVR_Controller.Device device
-	{
-		get
-		{
-			return SteamVR_Controller.Input((int)trackedObj.index);
-		}
-	}
+	//public SteamVR_Controller.Device device
+	//{
+	//	get
+	//	{
+	//		return SteamVR_Controller.Input((int)trackedObj.index);
+	//	}
+	//}
 
 	public delegate void TouchpadPress();
 	public static event TouchpadPress OnTouchpadPress;

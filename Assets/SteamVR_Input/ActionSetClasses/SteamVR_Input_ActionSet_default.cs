@@ -25,14 +25,6 @@ namespace Valve.VR
             }
         }
         
-        public virtual SteamVR_Action_Boolean HeadsetOnHead
-        {
-            get
-            {
-                return SteamVR_Actions.default_HeadsetOnHead;
-            }
-        }
-        
         public virtual SteamVR_Action_Boolean Draw
         {
             get
@@ -41,27 +33,51 @@ namespace Valve.VR
             }
         }
         
-        public virtual SteamVR_Action_Boolean ModeSelect
+        public virtual SteamVR_Action_Boolean BrushSelectToggle
         {
             get
             {
-                return SteamVR_Actions.default_ModeSelect;
+                return SteamVR_Actions.default_BrushSelectToggle;
             }
         }
         
-        public virtual SteamVR_Action_Vector2 ModePosition
+        public virtual SteamVR_Action_Vector2 BrushSelectPositionHelper
         {
             get
             {
-                return SteamVR_Actions.default_ModePosition;
+                return SteamVR_Actions.default_BrushSelectPositionHelper;
             }
         }
         
-        public virtual SteamVR_Action_Boolean MenuButton
+        public virtual SteamVR_Action_Boolean DrawEraseToggle
         {
             get
             {
-                return SteamVR_Actions.default_MenuButton;
+                return SteamVR_Actions.default_DrawEraseToggle;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean SaveButton
+        {
+            get
+            {
+                return SteamVR_Actions.default_SaveButton;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean DirectionSelectToggle
+        {
+            get
+            {
+                return SteamVR_Actions.default_DirectionSelectToggle;
+            }
+        }
+        
+        public virtual SteamVR_Action_Vector2 DirectionSelectPositionHelper
+        {
+            get
+            {
+                return SteamVR_Actions.default_DirectionSelectPositionHelper;
             }
         }
         

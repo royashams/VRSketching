@@ -6,22 +6,26 @@ using Valve.VR;
 public class ModelsController : MonoBehaviour {
     public GameObject sketch;
     public GameObject Projectionsketch;
-    public SteamVR_TrackedObject trackedObj;
-    private SteamVR_Controller.Device controller {
-        get { return SteamVR_Controller.Input((int)trackedObj.index); }
-    }
+    //public SteamVR_TrackedObject trackedObj;
+    //private SteamVR_Controller.Device controller {
+    //    get { return SteamVR_Controller.Input((int)trackedObj.index); }
+    //}
     private int modelIdx;
     private GameObject curModel;
     private PartitionMesh pm;
     private KdTree kdTree;
+    private Phong.PhongProjection phong;
     // Use this for initialization
     void Start() {
+        phong = GetComponent<Phong.PhongProjection>();
         pm = GetComponent<PartitionMesh>();
         kdTree = GetComponent<KdTree>();
         if (gameObject.transform.childCount > 0) {
             modelIdx = 0;
             curModel = gameObject.transform.GetChild(modelIdx).gameObject;
             curModel.SetActive(true);
+            phong.modelName = curModel.GetComponent<ModelInfo>().name;
+            phong.Init();
             MeshFilter mf = GetCurModelComponent<MeshFilter>();
             MeshCollider mc = GetCurModelComponent<MeshCollider>();
             if (mf) {
@@ -33,13 +37,17 @@ public class ModelsController : MonoBehaviour {
 
     // Update is called once per frame
     void LateUpdate() {
-        if ((controller.GetPress(SteamVR_Controller.ButtonMask.Grip) && controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)) || Input.GetKeyDown(KeyCode.Return)) {
-            SaveDrawing ();
+        //if ((controller.GetPress(SteamVR_Controller.ButtonMask.Grip) && controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)) || Input.GetKeyDown(KeyCode.Return)) {
+        if (SteamVR_Actions.default_SaveButton.state || Input.GetKeyDown(KeyCode.Return))
+        {
+            SaveDrawing();
             curModel.SetActive(false);
             if (modelIdx + 1 < gameObject.transform.childCount) {
                 modelIdx++;
                 curModel = gameObject.transform.GetChild(modelIdx).gameObject;
                 curModel.SetActive(true);
+                phong.modelName = curModel.GetComponent<ModelInfo>().name;
+                phong.Init();
                 MeshFilter mf = GetCurModelComponent<MeshFilter>();
                 MeshCollider mc = GetCurModelComponent<MeshCollider>();
                 if (mf) {
@@ -96,5 +104,10 @@ public class ModelsController : MonoBehaviour {
             }
         }
         return component;
+    }
+
+    public GameObject GetCurrentModel()
+    {
+        return curModel;
     }
 }

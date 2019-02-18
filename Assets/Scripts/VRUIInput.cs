@@ -8,9 +8,9 @@ using Valve.VR.Extras;
 public class VRUIInput : MonoBehaviour {
     private SteamVR_LaserPointer laserPointer;
     private SteamVR_TrackedObject trackedObj;
-    private SteamVR_Controller.Device controller {
-        get { return SteamVR_Controller.Input((int)trackedObj.index); }
-    }
+    //private SteamVR_Controller.Device controller {
+    //    get { return SteamVR_Controller.Input((int)trackedObj.index); }
+    //}
 
 
     private void OnEnable() {
@@ -26,7 +26,7 @@ public class VRUIInput : MonoBehaviour {
 
     private void HandlePointerIn(object sender, PointerEventArgs e) {
         var button = e.target.GetComponent<Button>();
-        if (controller.GetHairTriggerDown() && button != null) {
+        if (SteamVR_Actions.default_Draw.state && button != null) {
             button.onClick.Invoke();
         }
     }

@@ -16,9 +16,9 @@ public class Draw : MonoBehaviour {
     public SteamVR_TrackedObject trackedObj;
     public GameObject Stroke;
     public PartitionMesh pm;
-    private SteamVR_Controller.Device controller {
-        get { return SteamVR_Controller.Input((int)trackedObj.index); }
-    }
+    //private SteamVR_Controller.Device controller {
+    //    get { return SteamVR_Controller.Input((int)trackedObj.index); }
+    //}
     public string name;
     private int pointsInCurStroke = 0;
     private MeshFilter mf;
@@ -64,8 +64,10 @@ public class Draw : MonoBehaviour {
         switch (mode) {
             case Mode.Drawing:
                 bool drawn = false;
-                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                if (triggeraxis == 1.0f) {
+                //float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                //if (triggeraxis == 1.0f) {
+                bool drawButtonPressed = SteamVR_Actions.default_Draw.state;
+                if (drawButtonPressed) {
                     if (!drawnLastFrame) {
                         CreateNewStroke();
                     }

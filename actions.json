@@ -6,28 +6,38 @@
       "requirement": "mandatory"
     },
     {
-      "name": "/actions/default/in/HeadsetOnHead",
-      "type": "boolean",
-      "requirement": "optional"
-    },
-    {
       "name": "/actions/default/in/Draw",
       "type": "boolean",
       "requirement": "mandatory"
     },
     {
-      "name": "/actions/default/in/ModeSelect",
+      "name": "/actions/default/in/BrushSelectToggle",
       "type": "boolean",
       "requirement": "mandatory"
     },
     {
-      "name": "/actions/default/in/ModePosition",
+      "name": "/actions/default/in/BrushSelectPositionHelper",
       "type": "vector2",
       "requirement": "mandatory"
     },
     {
-      "name": "/actions/default/in/MenuButton",
+      "name": "/actions/default/in/DrawEraseToggle",
       "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/default/in/SaveButton",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/default/in/DirectionSelectToggle",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/default/in/DirectionSelectPositionHelper",
+      "type": "vector2",
       "requirement": "mandatory"
     },
     {
@@ -123,7 +133,6 @@
   "localization": [
     {
       "language_tag": "en_US",
-      "/actions/default/in/HeadsetOnHead": "Headset on head (proximity sensor)",
       "/actions/default/in/Pose": "Pose",
       "/actions/default/out/Haptic": "Haptic",
       "/actions/platformer/in/Jump": "Jump"
