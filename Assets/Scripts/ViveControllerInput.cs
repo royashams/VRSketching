@@ -105,7 +105,7 @@ public class ViveControllerInput : MonoBehaviour {
         // Switch brush mode using a button and a 2-axis input
         if (SteamVR_Actions.default_BrushSelectToggle.state)
         {
-            Vector2 touchpad = SteamVR_Actions.default_BrushSelectPositionHelper.axis;
+            Vector2 modeSelectVector = SteamVR_Actions.default_BrushSelectPositionHelper.axis;
             print("Pressing Touchpad");
 
             //if (touchpad.y > 0.7f)
@@ -126,11 +126,12 @@ public class ViveControllerInput : MonoBehaviour {
             //    comboDraw.enabled = true;
             //}
 
-            if (touchpad.x > 0.7f)
+            if (modeSelectVector.x > 0.7f)
             {
                 print("Moving Right");
-                //projectionMode = ProjectionMode.Spray;
-                projectionMode = (ProjectionMode)((int)(projectionMode + 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length);
+                var projectionModeIntVal = (int)projectionMode;
+                projectionModeIntVal = (projectionModeIntVal + 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
+                projectionMode = (ProjectionMode)projectionModeIntVal;
                 ChangeStroke(projectionMode);
                 sprayDraw.enabled = true;
 
@@ -142,14 +143,12 @@ public class ViveControllerInput : MonoBehaviour {
                 //}
             }
 
-            else if (touchpad.x < -0.7f)
+            else if (modeSelectVector.x < -0.7f)
             {
                 print("Moving left");
-                //projectionMode = ProjectionMode.ClosestHit;
-                var pm = (int)(projectionMode - 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
-                if (pm < 0)
-                    pm = System.Enum.GetNames(typeof(ProjectionMode)).Length - 1;
-                projectionMode = (ProjectionMode)pm;
+                var projectionModeIntVal = (int)projectionMode;
+                projectionModeIntVal = (projectionModeIntVal + System.Enum.GetNames(typeof(ProjectionMode)).Length - 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
+                projectionMode = (ProjectionMode)projectionModeIntVal;
                 ChangeStroke(projectionMode);
                 closestDraw.enabled = true;
             }
