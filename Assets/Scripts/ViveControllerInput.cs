@@ -16,6 +16,7 @@ public class ViveControllerInput : MonoBehaviour {
     public GameObject visualPointer;
     public float threshhold = 0.05f;
     public GameObject menu;
+    public GameObject modelContainer;
     private SteamVR_TrackedObject trackedObj;
     private SteamVR_LaserPointer laserPtr;
     private PartitionMesh pm;
@@ -61,8 +62,8 @@ public class ViveControllerInput : MonoBehaviour {
 
     private void Default_DrawEraseToggle_onChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
-        if (fromSource != Globals.HAND)
-            return;
+        //if (fromSource != Globals.HAND)
+        //    return;
         Debug.Log("Drawstate is now (false:Draw, true:Erase): " + newState.ToString());
         cursor.GetComponent<SwitchCursor>().Switch();
         closestDraw.SwitchMode();
@@ -145,7 +146,6 @@ public class ViveControllerInput : MonoBehaviour {
 
             if (modeSelectVector.x > 0.7f)
             {
-                print("Moving Right");
                 var projectionModeIntVal = (int)projectionMode;
                 projectionModeIntVal = (projectionModeIntVal + 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
                 projectionMode = (ProjectionMode)projectionModeIntVal;
@@ -161,7 +161,6 @@ public class ViveControllerInput : MonoBehaviour {
 
             else if (modeSelectVector.x < -0.7f)
             {
-                print("Moving left");
                 var projectionModeIntVal = (int)projectionMode;
                 projectionModeIntVal = (projectionModeIntVal + System.Enum.GetNames(typeof(ProjectionMode)).Length - 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
                 projectionMode = (ProjectionMode)projectionModeIntVal;
@@ -202,7 +201,10 @@ public class ViveControllerInput : MonoBehaviour {
                     case ProjectionMode.ClosestHit:
                         break;
                     case ProjectionMode.Phong:
-                        Debug.LogWarning("Phong projection not implemented yet! Falling back to closest point.");
+                        hit = pm.ProjectUsingPhong(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), modelContainer);
+                        cursor.transform.position = hit.point;
+                        phongDraw.SetTargetHit(hit);
+                        //Debug.LogWarning("Phong projection not implemented yet! Falling back to closest point.");
                         break;
 
                 }
@@ -364,6 +366,7 @@ public class ViveControllerInput : MonoBehaviour {
 
     private void ChangeStroke(ProjectionMode projectionMode)
     {
+        Debug.Log("Setting projection mode to " + projectionMode.ToString());
         DisableStroke();
         projectionCursor.SetActive(true);
         projectionLaser.SetActive(true);
@@ -394,8 +397,9 @@ public class ViveControllerInput : MonoBehaviour {
                 projectionCursor.SetActive(true);
                 break;
             case ProjectionMode.Phong:
-                Debug.LogWarning("Phong projection not yet implemented! Falling back to closest point.");
-                closestDraw.enabled = true;
+                //Debug.LogWarning("Phong projection not yet implemented! Falling back to closest point.");
+                phongDraw.enabled = true;
+                laserPtr.enabled = false;
                 projectionLaser.SetActive(false);
                 projectionCursor.SetActive(false);
                 break;

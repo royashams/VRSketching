@@ -262,6 +262,15 @@ namespace Phong
             phong = createPhongObject(vertices, (int)FV.Length, dim, triangles, (int)FF.Length);
         }
 
+        public Vector3 GetTriangleNormal(int triId)
+        {
+            var v1 = FV3D[FF[triID].idx[0]];
+            var v2 = FV3D[FF[triID].idx[1]];
+            var v3 = FV3D[FF[triID].idx[2]];
+
+            return Vector3.Cross(v3 - v1, v2 - v1);
+        }
+
         void WarningHandler(string message, object other_data)
         {
             Debug.Log(message);

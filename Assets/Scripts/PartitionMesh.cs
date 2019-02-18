@@ -108,6 +108,32 @@ public class PartitionMesh : MonoBehaviour {
         }
     }
 
+    public CustomHitInfo ProjectUsingPhong(Vector3 position, GameObject modelContainer)
+    {
+        CustomHitInfo hit = new CustomHitInfo();
+        Vector3 positionModelSpace = Globals.ChangeHandedness(mf.gameObject.transform.InverseTransformPoint(position));
+        Vector3 projection = new Vector3();
+        int triangleIdx = -1;
+        var phong = modelContainer.GetComponent<ModelsController>().GetPhongProjector();
+        var res = phong.Project(positionModelSpace, out projection, out triangleIdx);
+        if (res == Phong.PhongProjectionResult.Success)
+        {
+            hit.collider = mc;
+            hit.point = mf.gameObject.transform.TransformPoint(Globals.ChangeHandedness(projection));
+            hit.normal = mf.gameObject.transform.TransformVector(Globals.ChangeHandedness(phong.GetTriangleNormal(triangleIdx)));
+            hit.triangleIndex = triangleIdx;
+            hit.success = true;
+        }
+        else
+        {
+            Debug.LogWarning("Phong projection failed! Projection result: " + res.ToString());
+            hit = GlobalClosestHit(position);
+            hit.success = false;
+        }
+
+        return hit;
+    }
+
     public CustomHitInfo GlobalClosestHit(Vector3 position) {
         Mesh mesh = mf.sharedMesh;
         Vector3[] vertices = mesh.vertices;

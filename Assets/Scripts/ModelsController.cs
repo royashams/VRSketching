@@ -36,6 +36,11 @@ public class ModelsController : MonoBehaviour {
         }
     }
 
+    public Phong.PhongProjection GetPhongProjector()
+    {
+        return phong;
+    }
+
     // Update is called once per frame
     void LateUpdate() {
         //if ((controller.GetPress(SteamVR_Controller.ButtonMask.Grip) && controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)) || Input.GetKeyDown(KeyCode.Return)) {
