@@ -41,14 +41,6 @@ namespace Valve.VR
             }
         }
         
-        public virtual SteamVR_Action_Vector2 BrushSelectPositionHelper
-        {
-            get
-            {
-                return SteamVR_Actions.default_BrushSelectPositionHelper;
-            }
-        }
-        
         public virtual SteamVR_Action_Boolean DrawEraseToggle
         {
             get
@@ -62,14 +54,6 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.default_SaveButton;
-            }
-        }
-        
-        public virtual SteamVR_Action_Boolean DirectionSelectToggle
-        {
-            get
-            {
-                return SteamVR_Actions.default_DirectionSelectToggle;
             }
         }
         

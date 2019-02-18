@@ -1,5 +1,5 @@
 {
-  "app_key": "application.generated.unity.steamvr.exe",
+  "app_key": "application.generated.unity.academyofvr_htcvive.exe",
   "bindings": {
     "/actions/buggy": {
       "chords": [],
@@ -131,6 +131,114 @@
           "path": "/user/hand/right/output/haptic"
         }
       ],
+      "sources": [
+        {
+          "path": "/user/hand/left/input/joystick",
+          "mode": "joystick",
+          "parameters": {},
+          "inputs": {
+            "position": {
+              "output": "/actions/default/in/directionselectpositionhelper"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/joystick",
+          "mode": "joystick",
+          "parameters": {},
+          "inputs": {
+            "position": {
+              "output": "/actions/default/in/directionselectpositionhelper"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/grip",
+          "mode": "button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/brushselecttoggle"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/grip",
+          "mode": "button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/drawerasetoggle"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/trigger",
+          "mode": "button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/draw"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/x",
+          "mode": "toggle_button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/drawerasetoggle"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/y",
+          "mode": "button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/savebutton"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/trigger",
+          "mode": "button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/draw"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/a",
+          "mode": "toggle_button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/drawerasetoggle"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/b",
+          "mode": "button",
+          "parameters": {},
+          "inputs": {
+            "click": {
+              "output": "/actions/default/in/savebutton"
+            }
+          }
+        }
+      ],
+      "skeleton": []
+    },
+    "/actions/legacy": {
+      "chords": [],
+      "poses": [],
+      "haptics": [],
       "sources": [],
       "skeleton": []
     },

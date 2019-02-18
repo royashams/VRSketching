@@ -16,22 +16,12 @@
       "requirement": "mandatory"
     },
     {
-      "name": "/actions/default/in/BrushSelectPositionHelper",
-      "type": "vector2",
-      "requirement": "mandatory"
-    },
-    {
       "name": "/actions/default/in/DrawEraseToggle",
       "type": "boolean",
       "requirement": "mandatory"
     },
     {
       "name": "/actions/default/in/SaveButton",
-      "type": "boolean",
-      "requirement": "mandatory"
-    },
-    {
-      "name": "/actions/default/in/DirectionSelectToggle",
       "type": "boolean",
       "requirement": "mandatory"
     },

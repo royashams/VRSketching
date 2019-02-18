@@ -17,9 +17,10 @@ public class ModelsController : MonoBehaviour {
     private Phong.PhongProjection phong;
     // Use this for initialization
     void Start() {
-        phong = GetComponent<Phong.PhongProjection>();
+        //phong = GetComponent<Phong.PhongProjection>();
         pm = GetComponent<PartitionMesh>();
         kdTree = GetComponent<KdTree>();
+        phong = new Phong.PhongProjection();
         if (gameObject.transform.childCount > 0) {
             modelIdx = 0;
             curModel = gameObject.transform.GetChild(modelIdx).gameObject;
@@ -38,7 +39,7 @@ public class ModelsController : MonoBehaviour {
     // Update is called once per frame
     void LateUpdate() {
         //if ((controller.GetPress(SteamVR_Controller.ButtonMask.Grip) && controller.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)) || Input.GetKeyDown(KeyCode.Return)) {
-        if (SteamVR_Actions.default_SaveButton.state || Input.GetKeyDown(KeyCode.Return))
+        if (SteamVR_Actions.default_SaveButton.GetState(Globals.HAND) || Input.GetKeyDown(KeyCode.Return))
         {
             SaveDrawing();
             curModel.SetActive(false);

@@ -13,7 +13,7 @@ public class Draw : MonoBehaviour {
     public List<Vector3> normals;
     public List<float> timestamps;
     public float cursorSize = 32.0f;
-    public SteamVR_TrackedObject trackedObj;
+    //public SteamVR_TrackedObject trackedObj;
     public GameObject Stroke;
     public PartitionMesh pm;
     //private SteamVR_Controller.Device controller {
@@ -66,7 +66,7 @@ public class Draw : MonoBehaviour {
                 bool drawn = false;
                 //float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                 //if (triggeraxis == 1.0f) {
-                bool drawButtonPressed = SteamVR_Actions.default_Draw.state;
+                bool drawButtonPressed = SteamVR_Actions.default_Draw.GetState(Globals.HAND);
                 if (drawButtonPressed) {
                     if (!drawnLastFrame) {
                         CreateNewStroke();

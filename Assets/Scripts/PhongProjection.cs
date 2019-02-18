@@ -113,7 +113,7 @@ namespace Phong
         }
     }
 
-    public class PhongProjection : MonoBehaviour
+    public class PhongProjection
     {
         const float negEps = -0.00001f;
 
@@ -181,23 +181,24 @@ namespace Phong
         static int _stats_totalCallsToBary = 0;
         static int _stats_nearestNeighbourBary = 0, _stats_oneRingBary = 0, _stats_bruteForceBary = 0;
 
-        // Use this for initialization
-        void Start()
-        {
-            //Init();
-            //Vector3 projection;
-            //Vector3[] pts = new Vector3[100];
-            //for (int i = 0; i < pts.Length; ++i)
-            //    pts[i] = new Vector3(-0.5f + i * 0.4f / pts.Length, 0.0f, 0.0f);
-            //foreach (var pt in pts)
-            //{
-            //    var res = Project(pt, out projection, false);
-            //    if (res == PhongProjectionResult.Success)
-            //        Debug.Log(pt.ToString("F3") + "\t" + projection.ToString("F3"));
-            //    else
-            //        Debug.Log(pt.ToString("F3") + "\t" + res.ToString());
-            //}
-        }
+        //// Use this for initialization
+        //void Start()
+        //{
+        //    //Init();
+        //    //Vector3 projection;
+        //    //int idx;
+        //    //Vector3[] pts = new Vector3[100];
+        //    //for (int i = 0; i < pts.Length; ++i)
+        //    //    pts[i] = new Vector3(-0.5f + i * 0.4f / pts.Length, 0.0f, 0.0f);
+        //    //foreach (var pt in pts)
+        //    //{
+        //    //    var res = Project(pt, out projection, out idx, false);
+        //    //    if (res == PhongProjectionResult.Success)
+        //    //        Debug.Log(pt.ToString("F3") + "\t" + projection.ToString("F3"));
+        //    //    else
+        //    //        Debug.Log(pt.ToString("F3") + "\t" + res.ToString());
+        //    //}
+        //}
 
         public void Init()
         {
@@ -282,12 +283,13 @@ namespace Phong
         // NOTE: You might want to convert your input point as well as the output of this function
         // to Unity's left-handed coordinate system by flipping the X-coordinate (since this is how 
         // Unity imports OBJ files)
-        public PhongProjectionResult Project(Vector3 point3D, out Vector3 projection, bool printDebugInfo = false)
+        public PhongProjectionResult Project(Vector3 point3D, out Vector3 projection, out int triID, bool printDebugInfo = false)
         {
             if (printDebugInfo)
                 Debug.Log("Input point: " + point3D.ToString("F5"));
 
             projection = new Vector3();
+            triID = -1;
 
             float[] bary;
             int tetId;
