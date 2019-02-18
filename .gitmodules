@@ -1,3 +1,6 @@
 [submodule "Assets/geometry3Sharp"]
 	path = Assets/geometry3Sharp
 	url = https://github.com/gradientspace/geometry3Sharp.git
+[submodule "weighted-avg-surfaces"]
+	path = weighted-avg-surfaces
+	url = https://github.com/rarora7777/weighted-avg-surfaces
