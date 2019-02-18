@@ -108,28 +108,29 @@ public class ViveControllerInput : MonoBehaviour {
             Vector2 touchpad = SteamVR_Actions.default_BrushSelectPositionHelper.axis;
             print("Pressing Touchpad");
 
-            if (touchpad.y > 0.7f)
-            {
-                // PROBLEM! need to change projectionMode here as well, otherwise it will use the wrong ray :( 
-                print("Moving Up");
-                projectionMode = ProjectionMode.Occlusion;
-                ChangeStroke(projectionMode);
-                occlusionDraw.enabled = true;
+            //if (touchpad.y > 0.7f)
+            //{
+            //    // PROBLEM! need to change projectionMode here as well, otherwise it will use the wrong ray :( 
+            //    print("Moving Up");
+            //    projectionMode = ProjectionMode.Occlusion;
+            //    ChangeStroke(projectionMode);
+            //    occlusionDraw.enabled = true;
 
-            }
+            //}
 
-            else if (touchpad.y < -0.7f)
-            {
-                print("Down: Combined Ray");
-                projectionMode = ProjectionMode.Combo;
-                ChangeStroke(projectionMode);
-                comboDraw.enabled = true;
-            }
+            //else if (touchpad.y < -0.7f)
+            //{
+            //    print("Down: Combined Ray");
+            //    projectionMode = ProjectionMode.Combo;
+            //    ChangeStroke(projectionMode);
+            //    comboDraw.enabled = true;
+            //}
 
             if (touchpad.x > 0.7f)
             {
                 print("Moving Right");
-                projectionMode = ProjectionMode.Spray;
+                //projectionMode = ProjectionMode.Spray;
+                projectionMode = (ProjectionMode)((int)(projectionMode + 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length);
                 ChangeStroke(projectionMode);
                 sprayDraw.enabled = true;
 
@@ -144,7 +145,11 @@ public class ViveControllerInput : MonoBehaviour {
             else if (touchpad.x < -0.7f)
             {
                 print("Moving left");
-                projectionMode = ProjectionMode.ClosestHit;
+                //projectionMode = ProjectionMode.ClosestHit;
+                var pm = (int)(projectionMode - 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
+                if (pm < 0)
+                    pm = System.Enum.GetNames(typeof(ProjectionMode)).Length - 1;
+                projectionMode = (ProjectionMode)pm;
                 ChangeStroke(projectionMode);
                 closestDraw.enabled = true;
             }
