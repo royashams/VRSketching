@@ -112,37 +112,18 @@ public class ViveControllerInput : MonoBehaviour {
 
         // Choose a direction, currently used for the the projection direction in the spraypaint mode
         //if (controller.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
-        //if (SteamVR_Actions.default_DirectionSelectToggle.state)
+        if (!SteamVR_Actions.default_BrushSelectToggle.GetState(Globals.HAND))
         {
             Vector2 touch = SteamVR_Actions.default_DirectionSelectPositionHelper.GetAxis(Globals.HAND);
             //Debug.Log("i was touched...");
             touchCoords.x = touch.x;
             touchCoords.y = touch.y;
         }
-
         // Switch brush mode using a button and a 2-axis input
-        if (SteamVR_Actions.default_BrushSelectToggle.GetState(Globals.HAND))
+        else
         {
             Vector2 modeSelectVector = SteamVR_Actions.default_DirectionSelectPositionHelper.GetAxis(Globals.HAND);
             print("Pressing Touchpad");
-
-            //if (touchpad.y > 0.7f)
-            //{
-            //    // PROBLEM! need to change projectionMode here as well, otherwise it will use the wrong ray :( 
-            //    print("Moving Up");
-            //    projectionMode = ProjectionMode.Occlusion;
-            //    ChangeStroke(projectionMode);
-            //    occlusionDraw.enabled = true;
-
-            //}
-
-            //else if (touchpad.y < -0.7f)
-            //{
-            //    print("Down: Combined Ray");
-            //    projectionMode = ProjectionMode.Combo;
-            //    ChangeStroke(projectionMode);
-            //    comboDraw.enabled = true;
-            //}
 
             if (modeSelectVector.x > 0.7f)
             {
@@ -150,13 +131,6 @@ public class ViveControllerInput : MonoBehaviour {
                 projectionModeIntVal = (projectionModeIntVal + 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
                 projectionMode = (ProjectionMode)projectionModeIntVal;
                 ChangeStroke(projectionMode);
-
-                //if (Input.touchCount > 0) {
-                //    Touch touch = Input.GetTouch(0);
-                //    Vector2 pos = touch.position;
-                //    Debug.Log(pos.x);
-                //    Debug.Log(pos.y);
-                //}
             }
 
             else if (modeSelectVector.x < -0.7f)
