@@ -2,13 +2,13 @@
   "source": "Unity",
   "applications": [
     {
-      "app_key": "application.generated.unity.academyofvr_htcvive.exe",
+      "app_key": "application.generated.unity.projectionpainter.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "C:\\Users\\raror\\Documents\\VR_drawing_on_meshes\\actions.json",
+      "action_manifest_path": "C:\\Users\\arorar\\Documents\\VR_drawing_on_meshes\\actions.json",
       "strings": {
         "en_us": {
-          "name": "AcademyOfVR_HTCVive [Testing]"
+          "name": "ProjectionPainter [Testing]"
         }
       }
     }

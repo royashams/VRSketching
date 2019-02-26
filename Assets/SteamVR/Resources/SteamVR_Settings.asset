@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f24c3bc66743d1847b2b059edd4f45a8, type: 3}
+  m_Script: {fileID: 11500000, guid: c153d0a74801f2f4c980d9357bfad050, type: 3}
   m_Name: SteamVR_Settings
   m_EditorClassIdentifier: 
   pauseGameWhenDashboardVisible: 1
@@ -20,5 +20,5 @@ MonoBehaviour:
   inputUpdateMode: 2
   poseUpdateMode: 8
   activateFirstActionSetOnStart: 1
-  editorAppKey: application.generated.unity.academyofvr_htcvive.exe
+  editorAppKey: application.generated.unity.projectionpainter.exe
   autoEnableVR: 1
