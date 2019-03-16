@@ -112,7 +112,7 @@ public class ViveControllerInput : MonoBehaviour {
 
         // Choose a direction, currently used for the the projection direction in the spraypaint mode
         //if (controller.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
-        if (!SteamVR_Actions.default_BrushSelectToggle.GetState(Globals.HAND))
+        if (!SteamVR_Actions.default_BrushSelectToggle.GetStateDown(Globals.HAND))
         {
             Vector2 touch = SteamVR_Actions.default_DirectionSelectPositionHelper.GetAxis(Globals.HAND);
             //Debug.Log("i was touched...");
