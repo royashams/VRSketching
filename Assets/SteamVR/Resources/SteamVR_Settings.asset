@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c153d0a74801f2f4c980d9357bfad050, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d6374cf6d3cf1e43921ab43c3d8f6a2, type: 3}
   m_Name: SteamVR_Settings
   m_EditorClassIdentifier: 
   pauseGameWhenDashboardVisible: 1
