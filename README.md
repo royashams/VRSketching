@@ -1,7 +1,7 @@
 This project contains submodules. To pull while updating all submodules, run
 > git submodule update --recursive --remote
 
-<h1>Controls</h1>  
+# Controls  
 
 <b>HTC Vive</b>  
 Engage/disengage drawing/erasing: Trigger  
@@ -20,12 +20,12 @@ Change direction of projection (for Spray brush): Move D-pad
 Move to next mesh: B or Y button
 
 
-<h2>Fix for weird "Missing Script" error</h2>
+## ~~Fix for weird "Missing Script" error~~
 
-1. On `NewCameraRig`>`Controller (left)` and `NewCameraRig`>`Controller (right)`, add the script "SteamVR_Behaviour_Pose". Set the "Input Source" variable in the script to `Left Hand` and `Right Hand`, resp.
+~~1. On `NewCameraRig`>`Controller (left)` and `NewCameraRig`>`Controller (right)`, add the script "SteamVR_Behaviour_Pose". Set the "Input Source" variable in the script to `Left Hand` and `Right Hand`, resp.~~
 
-2. The `Models`>`bunny` might report a missing prefab. Delete it and pull the prefab from `Assets/Models`. Add a `Mesh Collider` component to it, and set the mesh to be the `default` mesh in the prefab. Now, disable this gameobject in the Inspector.
+~~2. The `Models`>`bunny` might report a missing prefab. Delete it and pull the prefab from `Assets/Models`. Add a `Mesh Collider` component to it, and set the mesh to be the `default` mesh in the prefab. Now, disable this gameobject in the Inspector.~~
 
-3. For all the models (children of `Models`), add the script `ModelInfo` and set the name variable to be the same as the name of the object. e.g, the first one should be `bigbuckbunny`.
+~~3. For all the models (children of `Models`), add the script `ModelInfo` and set the name variable to be the same as the name of the object. e.g, the first one should be `bigbuckbunny`.~~
 
-4. For `bigbuckbunny` and `head`, set the `Load Inside Offset Surface` variable to `True`.
+~~4. For `bigbuckbunny` and `head`, set the `Load Inside Offset Surface` variable to `True`.~~
