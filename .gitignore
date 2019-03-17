@@ -378,3 +378,8 @@ healthchecksdb
 
 .vscode*
 
+# Skip imported packages
+# [Aa]ssets/SteamVR/*
+
+# Don't ignore asset meta files
+![Aa]ssets/**/*.meta
