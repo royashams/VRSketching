@@ -1,18 +1,20 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Valve.VR;
+using Valve.VR.Extras;
 
 [RequireComponent(typeof(SteamVR_LaserPointer))]
 public class VRUIInput : MonoBehaviour {
     private SteamVR_LaserPointer laserPointer;
-    private SteamVR_TrackedObject trackedObj;
-    private SteamVR_Controller.Device controller {
-        get { return SteamVR_Controller.Input((int)trackedObj.index); }
-    }
+    //private SteamVR_TrackedObject trackedObj;
+    //private SteamVR_Controller.Device controller {
+    //    get { return SteamVR_Controller.Input((int)trackedObj.index); }
+    //}
 
 
     private void OnEnable() {
-        trackedObj = GetComponent<SteamVR_TrackedObject>();
+        //trackedObj = GetComponent<SteamVR_TrackedObject>();
         laserPointer = GetComponent<SteamVR_LaserPointer>();
         laserPointer.PointerIn -= HandlePointerIn;
         laserPointer.PointerIn += HandlePointerIn;
@@ -24,7 +26,7 @@ public class VRUIInput : MonoBehaviour {
 
     private void HandlePointerIn(object sender, PointerEventArgs e) {
         var button = e.target.GetComponent<Button>();
-        if (controller.GetHairTriggerDown() && button != null) {
+        if (SteamVR_Actions.default_Draw.GetState(Globals.HAND) && button != null) {
             button.onClick.Invoke();
         }
     }

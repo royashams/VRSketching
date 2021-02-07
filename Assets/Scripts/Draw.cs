@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Valve.VR;
 
 public class Draw : MonoBehaviour {
     public int verticesPerPoint = 6;
@@ -12,12 +13,12 @@ public class Draw : MonoBehaviour {
     public List<Vector3> normals;
     public List<float> timestamps;
     public float cursorSize = 32.0f;
-    public SteamVR_TrackedObject trackedObj;
+    //public SteamVR_TrackedObject trackedObj;
     public GameObject Stroke;
     public PartitionMesh pm;
-    private SteamVR_Controller.Device controller {
-        get { return SteamVR_Controller.Input((int)trackedObj.index); }
-    }
+    //private SteamVR_Controller.Device controller {
+    //    get { return SteamVR_Controller.Input((int)trackedObj.index); }
+    //}
     public string name;
     private int pointsInCurStroke = 0;
     private MeshFilter mf;
@@ -63,8 +64,10 @@ public class Draw : MonoBehaviour {
         switch (mode) {
             case Mode.Drawing:
                 bool drawn = false;
-                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                if (triggeraxis == 1.0f) {
+                //float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                //if (triggeraxis == 1.0f) {
+                bool drawButtonPressed = SteamVR_Actions.default_Draw.GetState(Globals.HAND);
+                if (drawButtonPressed) {
                     if (!drawnLastFrame) {
                         CreateNewStroke();
                     }
@@ -191,10 +194,10 @@ public class Draw : MonoBehaviour {
             int oldTriangleLength = triangles.Length;
             Array.Resize(ref triangles, oldTriangleLength + verticesPerPoint * 6);
             for (int quad = 0; quad < verticesPerPoint; ++quad) {
-                triangles[oldTriangleLength + quad * 6 + 0] = (oldVerticeLength - 6) + quad;
+                triangles[oldTriangleLength + quad * 6 + 0] = (oldVerticeLength - verticesPerPoint) + quad;
                 triangles[oldTriangleLength + quad * 6 + 1] = oldVerticeLength + quad;
-                triangles[oldTriangleLength + quad * 6 + 2] = (oldVerticeLength - 6) + (quad + 1) % verticesPerPoint;
-                triangles[oldTriangleLength + quad * 6 + 3] = (oldVerticeLength - 6) + (quad + 1) % verticesPerPoint;
+                triangles[oldTriangleLength + quad * 6 + 2] = (oldVerticeLength - verticesPerPoint) + (quad + 1) % verticesPerPoint;
+                triangles[oldTriangleLength + quad * 6 + 3] = (oldVerticeLength - verticesPerPoint) + (quad + 1) % verticesPerPoint;
                 triangles[oldTriangleLength + quad * 6 + 4] = oldVerticeLength + quad;
                 triangles[oldTriangleLength + quad * 6 + 5] = oldVerticeLength + (quad + 1) % verticesPerPoint;
             }

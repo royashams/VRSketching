@@ -1,0 +1,16 @@
+{
+  "source": "Unity",
+  "applications": [
+    {
+      "app_key": "application.generated.unity.projectionpainter.exe",
+      "launch_type": "url",
+      "url": "steam://launch/",
+      "action_manifest_path": "C:\\Users\\royashams\\Documents\\dgp\\Copy\\VRSketching\\actions.json",
+      "strings": {
+        "en_us": {
+          "name": "ProjectionPainter [Testing]"
+        }
+      }
+    }
+  ]
+}

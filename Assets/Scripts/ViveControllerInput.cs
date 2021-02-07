@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Valve.VR;
+using Valve.VR.Extras;
 
 public class ViveControllerInput : MonoBehaviour {
     public ModelsController mc;
@@ -8,11 +10,13 @@ public class ViveControllerInput : MonoBehaviour {
     public Draw occlusionDraw;
     public Draw sprayDraw;
     public Draw comboDraw;
+    public Draw phongDraw;
     public GameObject projectionCursor;
     public GameObject projectionLaser;
     public GameObject visualPointer;
     public float threshhold = 0.05f;
     public GameObject menu;
+    public GameObject modelContainer;
     private SteamVR_TrackedObject trackedObj;
     private SteamVR_LaserPointer laserPtr;
     private PartitionMesh pm;
@@ -22,10 +26,10 @@ public class ViveControllerInput : MonoBehaviour {
     private GameObject cursor;
     private Vector3 hitCursorNormalLocal;
     private int hitCursorTriangleIdx;
-    private SteamVR_Controller.Device controller {
-        get { return SteamVR_Controller.Input((int)trackedObj.index); }
-    }
-    private string projectionMode;
+    //private SteamVR_Controller.Device controller {
+    //    get { return SteamVR_Controller.Input((int)trackedObj.index); }
+    //}
+    private ProjectionMode projectionMode;
     public Ray OcclusionRay;
     public Ray SprayRay;
     private Ray ComboRay;
@@ -44,7 +48,7 @@ public class ViveControllerInput : MonoBehaviour {
         pm = mc.GetComponent<PartitionMesh>();
         trackedObj = GetComponent<SteamVR_TrackedObject>();
         laserPtr = GetComponent<SteamVR_LaserPointer>();
-        projectionMode = "Closest Hit";
+        projectionMode = ProjectionMode.ClosestHit;
         ChangeStroke(projectionMode);
         foreach (Transform child in transform) {
             if (child.name == "Cursor") {
@@ -52,6 +56,22 @@ public class ViveControllerInput : MonoBehaviour {
                 break;
             }
         }
+
+        SteamVR_Actions.default_DrawEraseToggle.onChange += Default_DrawEraseToggle_onChange;
+    }
+
+    private void Default_DrawEraseToggle_onChange(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
+    {
+        //if (fromSource != Globals.HAND)
+        //    return;
+        Debug.Log("Drawstate is now (false:Draw, true:Erase): " + newState.ToString());
+        cursor.GetComponent<SwitchCursor>().Switch();
+        closestDraw.SwitchMode();
+        occlusionDraw.SwitchMode();
+        sprayDraw.SwitchMode();
+        comboDraw.SwitchMode();
+        projectionLaser.SetActive(!projectionLaser.activeSelf);
+        SwitchMode();
     }
 
     private void Start() {
@@ -77,68 +97,48 @@ public class ViveControllerInput : MonoBehaviour {
         // if (counter % 20 != 0)
         //     return;
         cursor.transform.position = gameObject.transform.TransformPoint(0f, -0.1f, 0.05f);
-        if (controller.GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu)) {
-            cursor.GetComponent<SwitchCursor>().Switch();
-            closestDraw.SwitchMode();
-            occlusionDraw.SwitchMode();
-            sprayDraw.SwitchMode();
-            comboDraw.SwitchMode();
-            projectionLaser.SetActive(!projectionLaser.activeSelf);
-            SwitchMode();
-        }
+        // Swtich b/w drawing and erasing
+        //if (controller.GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu))
+        //if (SteamVR_Actions.default_DrawEraseToggle.state)
+        //{
+        //    cursor.GetComponent<SwitchCursor>().Switch();
+        //    closestDraw.SwitchMode();
+        //    occlusionDraw.SwitchMode();
+        //    sprayDraw.SwitchMode();
+        //    comboDraw.SwitchMode();
+        //    projectionLaser.SetActive(!projectionLaser.activeSelf);
+        //    SwitchMode();
+        //}
 
-        if (controller.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
+        // Choose a direction, currently used for the the projection direction in the spraypaint mode
+        //if (controller.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
+        if (!SteamVR_Actions.default_BrushSelectToggle.GetStateDown(Globals.HAND))
         {
-            Vector2 touch = (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0));
+            Vector2 touch = SteamVR_Actions.default_DirectionSelectPositionHelper.GetAxis(Globals.HAND);
             //Debug.Log("i was touched...");
             touchCoords.x = touch.x;
             touchCoords.y = touch.y;
         }
-
-        if (controller.GetPress(SteamVR_Controller.ButtonMask.Touchpad))
+        // Switch brush mode using a button and a 2-axis input
+        else
         {
-            Vector2 touchpad = (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_Axis0));
+            Vector2 modeSelectVector = SteamVR_Actions.default_DirectionSelectPositionHelper.GetAxis(Globals.HAND);
             print("Pressing Touchpad");
 
-            if (touchpad.y > 0.7f)
+            if (modeSelectVector.x > 0.7f)
             {
-                // PROBLEM! need to change projectionMode here as well, otherwise it will use the wrong ray :( 
-                print("Moving Up");
-                projectionMode = "Occlusion";
+                var projectionModeIntVal = (int)projectionMode;
+                projectionModeIntVal = (projectionModeIntVal + 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
+                projectionMode = (ProjectionMode)projectionModeIntVal;
                 ChangeStroke(projectionMode);
-                occlusionDraw.enabled = true;
-
             }
 
-            else if (touchpad.y < -0.7f)
+            else if (modeSelectVector.x < -0.7f)
             {
-                print("Down: Combined Ray");
-                projectionMode = "Combo";
+                var projectionModeIntVal = (int)projectionMode;
+                projectionModeIntVal = (projectionModeIntVal + System.Enum.GetNames(typeof(ProjectionMode)).Length - 1) % System.Enum.GetNames(typeof(ProjectionMode)).Length;
+                projectionMode = (ProjectionMode)projectionModeIntVal;
                 ChangeStroke(projectionMode);
-                comboDraw.enabled = true;
-            }
-
-            if (touchpad.x > 0.7f)
-            {
-                print("Moving Right");
-                projectionMode = "Spray";
-                ChangeStroke(projectionMode);
-                sprayDraw.enabled = true;
-
-                //if (Input.touchCount > 0) {
-                //    Touch touch = Input.GetTouch(0);
-                //    Vector2 pos = touch.position;
-                //    Debug.Log(pos.x);
-                //    Debug.Log(pos.y);
-                //}
-            }
-
-            else if (touchpad.x < -0.7f)
-            {
-                print("Moving left");
-                projectionMode = "Closest Hit";
-                ChangeStroke(projectionMode);
-                closestDraw.enabled = true;
             }
 
         }
@@ -150,7 +150,7 @@ public class ViveControllerInput : MonoBehaviour {
         switch (mode) {
             case Mode.Drawing:
                 PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
-                float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
+                //float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
                 // // `hit` is the point on the mesh closest to the controller
                 hit = pm.GlobalClosestHit(cursor.transform.position);
                 cursor.transform.position = hit.point;
@@ -160,46 +160,27 @@ public class ViveControllerInput : MonoBehaviour {
                 SprayRay = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f + (touchCoords.x *0.1f), 0f + (touchCoords.y * 0.1f), 0.05f));
                 // ray is the ray from the headset to the controller (in `Occlusion` mode, which we want to use)
                 switch (projectionMode) {
-                    case "Occlusion":
+                    case ProjectionMode.Occlusion:
                         ray = OcclusionRay;
                         break;
-                    case "Spray":
+                    case ProjectionMode.Spray:
                          //ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
                         ray = SprayRay;
                         //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
                         break;
-                    case "Combo":
+                    case ProjectionMode.Combo:
                         ComboRay = makeComboRay();
                         ray = ComboRay;
                         break;
-                    case "Closest Hit":
-                        // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
-                        // float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                        // `hit` is the point on the mesh closest to the controller
-                        // hit = pm.GlobalClosestHit(cursor.transform.position);
-                        // cursor.transform.position = hit.point;
-                        // //Debug.Log("Inside");
-                        // closestDraw.SetTargetHit(hit);
-                        // ray = new Ray();
+                    case ProjectionMode.ClosestHit:
+                        break;
+                    case ProjectionMode.Phong:
+                        hit = pm.ProjectUsingPhong(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), modelContainer);
+                        cursor.transform.position = hit.point;
+                        phongDraw.SetTargetHit(hit);
+                        //Debug.LogWarning("Phong projection not implemented yet! Falling back to closest point.");
                         break;
 
-                        //case ProjectionMode.Occlusion:
-                        //    ray = new Ray(Camera.main.transform.position, gameObject.transform.TransformPoint(0f, -0.1f, 0.05f) - Camera.main.transform.position);                       
-                        //    break;
-                        //case ProjectionMode.Spray:
-                        //    ray = new Ray(gameObject.transform.TransformPoint(0f, -0.1f, 0.05f), gameObject.transform.TransformVector(0f, -0.1f, 0.05f));
-                        //    //ray = new Ray(gameObject.transform.position, gameObject.transform.forward);
-                        //    break;
-                        //case ProjectionMode.ClosestHit:
-                        //    // PartitionMesh.CustomHitInfo hit = new PartitionMesh.CustomHitInfo();
-                        //    // float triggeraxis = controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x;
-                        //    // `hit` is the point on the mesh closest to the controller
-                        //    hit = pm.GlobalClosestHit(cursor.transform.position);
-                        //    cursor.transform.position = hit.point;
-                        //    //Debug.Log("Inside");
-                        //    closestDraw.SetTargetHit(hit);
-                        //    ray = new Ray();
-                        //    break;
                 }
                 RaycastHit hitInfo;
                 int layermask = 1 << 9;
@@ -286,7 +267,7 @@ public class ViveControllerInput : MonoBehaviour {
         // Debug.Log("occ " + OcclusionRay.ToString());
         // Debug.Log("spr "+ SprayRay.ToString());
         // Debug.Log("combo" + ComboRay.ToString());
-        if (controller.GetAxis(Valve.VR.EVRButtonId.k_EButton_SteamVR_Trigger).x == 1.0f)
+        if (SteamVR_Actions.default_Draw.GetState(Globals.HAND))
         {
             Debug.Log(
                 dist_cdI.ToString() + ' ' + angle_caI.ToString() + ' ' +
@@ -357,36 +338,44 @@ public class ViveControllerInput : MonoBehaviour {
         menu.SetActive(false);
     }
 
-    private void ChangeStroke(string projectionMode)
+    private void ChangeStroke(ProjectionMode projectionMode)
     {
+        Debug.Log("Setting projection mode to " + projectionMode.ToString());
         DisableStroke();
         projectionCursor.SetActive(true);
         projectionLaser.SetActive(true);
 
         switch (projectionMode)
         {
-            case "Occlusion":
+            case ProjectionMode.Occlusion:
                 occlusionDraw.enabled = true;
                 laserPtr.enabled = false;
                 projectionLaser.SetActive(true);
                 projectionCursor.SetActive(true);
                 break;
-            case "Closest Hit":
+            case ProjectionMode.ClosestHit:
                 closestDraw.enabled = true;
                 projectionLaser.SetActive(false);
                 projectionCursor.SetActive(false);
                 break;
-            case "Spray":
+            case ProjectionMode.Spray:
                 sprayDraw.enabled = true;
                 laserPtr.enabled = false;
                 projectionLaser.SetActive(true);
                 projectionCursor.SetActive(true);
                 break;
-            case "Combo":
+            case ProjectionMode.Combo:
                 comboDraw.enabled = true;
                 laserPtr.enabled = false;
                 projectionLaser.SetActive(true);
                 projectionCursor.SetActive(true);
+                break;
+            case ProjectionMode.Phong:
+                //Debug.LogWarning("Phong projection not yet implemented! Falling back to closest point.");
+                phongDraw.enabled = true;
+                laserPtr.enabled = false;
+                projectionLaser.SetActive(false);
+                projectionCursor.SetActive(false);
                 break;
                 //case ProjectionMode.Occlusion:
                 //    occlusionDraw.enabled = true;
@@ -408,6 +397,8 @@ public class ViveControllerInput : MonoBehaviour {
         closestDraw.enabled = false;
         occlusionDraw.enabled = false;
         sprayDraw.enabled = false;
+        comboDraw.enabled = false;
+        phongDraw.enabled = false;
     }
 
     public void SwitchMode() {
